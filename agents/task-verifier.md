@@ -1,6 +1,11 @@
 ---
 name: task-verifier
-description: Verify task completion by checking acceptance criteria against the codebase. Use when validating that implementation satisfies specific, machine-verifiable criteria from a plan.
+description: |
+  Verify task completion by checking acceptance criteria against the codebase. Use when validating that implementation satisfies specific, machine-verifiable criteria from a plan.
+  <example>verify these acceptance criteria against the codebase</example>
+  <example>check if task 3 criteria pass</example>
+  <example>run verification on the implementation plan</example>
+color: green
 model: sonnet
 tools: Read, Glob, Grep, Bash(npm:*), Bash(npx:*), Bash(git:*), Bash(ls:*)
 ---
