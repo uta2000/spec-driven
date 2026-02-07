@@ -14,12 +14,13 @@ Every planned task gets explicit, machine-verifiable acceptance criteria. A veri
 | `verify-acceptance-criteria` | Post-implementation: mechanically checks each criterion against the codebase |
 | `task-verifier` agent | Runs PASS/FAIL/CANNOT_VERIFY checks with evidence |
 
-**Two hooks:**
+**Three hooks:**
 
 | Hook | Trigger | Action |
 |------|---------|--------|
+| SessionStart | Every session | Injects spec-driven conventions into context |
 | PostToolUse (Write) | Plan file written to `plans/*.md` | Reminds AI to run `verify-plan-criteria` |
-| SessionStart | Every session | Injects spec-driven conventions |
+| Stop | Session ending | Blocks if code was implemented without running `verify-acceptance-criteria` |
 
 ## Installation
 
