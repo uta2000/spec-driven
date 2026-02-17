@@ -1,25 +1,65 @@
 # spec-driven
 
-A Claude Code plugin that adds acceptance criteria discipline to AI-assisted development.
+A Claude Code plugin that enforces discipline across the feature development lifecycle — from design through implementation to verification.
 
-## What It Does
+## The Problem
 
-Every planned task gets explicit, machine-verifiable acceptance criteria. A verification agent checks them before work is marked complete.
+Features get brainstormed, then jump straight to code. Halfway through, you discover schema constraints that don't match, types that need changing, pipeline assumptions that break. A 2-hour feature becomes a 6-hour debugging session.
 
-**Two skills + one agent:**
+## The Solution
+
+Six skills that cover the full pre- and post-implementation lifecycle. Catch conflicts when they're cheap to fix — a line edit in a design doc instead of a code rewrite.
+
+## Skills
+
+### Pre-Implementation (Design Phase)
+
+| Skill | Step | Purpose |
+|-------|------|---------|
+| `spike` | 3 | De-risk technical unknowns with time-boxed experiments before committing to a design |
+| `design-document` | 4 | Turn brainstorming decisions into structured, implementable design docs |
+| `design-verification` | 5 | Verify a design against the actual codebase — schema, types, pipelines, routes, dependencies |
+| `create-issue` | 6 | Create well-structured GitHub issues from verified designs |
+
+### Post-Implementation (Verification Phase)
+
+| Skill | Step | Purpose |
+|-------|------|---------|
+| `verify-plan-criteria` | 8 | Validate every task has machine-verifiable acceptance criteria, auto-draft missing ones |
+| `verify-acceptance-criteria` | 12 | Mechanically check each criterion against the codebase before claiming work is done |
+
+### Agent
 
 | Component | Purpose |
 |-----------|---------|
-| `verify-plan-criteria` | Post-planning: validates every task has acceptance criteria, auto-drafts missing ones |
-| `verify-acceptance-criteria` | Post-implementation: mechanically checks each criterion against the codebase |
-| `task-verifier` agent | Runs PASS/FAIL/CANNOT_VERIFY checks with evidence |
+| `task-verifier` | Runs PASS/FAIL/CANNOT_VERIFY checks with evidence |
 
-**Three hooks:**
+## Where These Fit in the Lifecycle
+
+```
+ 1. Idea
+ 2. Brainstorming
+ 3. Spike / PoC                  ← spike
+ 4. Design Document              ← design-document
+ 5. Design Verification          ← design-verification
+ 6. GitHub Issue                  ← create-issue
+ 7. Implementation Plan
+ 8. Plan Criteria Check           ← verify-plan-criteria
+ 9. Worktree Setup
+10. Implementation (TDD)
+11. Code Review
+12. Acceptance Verification       ← verify-acceptance-criteria
+13. Verification Before Completion
+14. PR / Merge
+15. Deploy
+```
+
+## Hooks
 
 | Hook | Trigger | Action |
 |------|---------|--------|
 | SessionStart | Every session | Injects spec-driven conventions into context |
-| PostToolUse (Write) | Plan file written to `plans/*.md` | Reminds AI to run `verify-plan-criteria` |
+| PostToolUse (Write) | Plan file written to `plans/*.md` | Reminds to run `verify-plan-criteria` |
 | Stop | Session ending | Blocks if code was implemented without running `verify-acceptance-criteria` |
 
 ## Installation
@@ -32,15 +72,19 @@ Add this repo as a marketplace source in Claude Code, then install the `spec-dri
 
 Copy the `agents/`, `skills/`, and `hooks/` directories into your project's `.claude/` directory.
 
-## Workflow
+## Example: Design Verification in Action
 
-```
-write plan → verify-plan-criteria (auto-draft missing AC)
-  → user approves plan
-  → implement tasks
-  → verify-acceptance-criteria (mechanical check)
-  → VERIFIED / INCOMPLETE / BLOCKED
-```
+A design for a "Creative Domain Generator" was verified against the codebase before any code was written. The verification caught 5 issues:
+
+| Finding | What would have happened |
+|---------|------------------------|
+| `keyword_phrase` is NOT NULL | Runtime crash when inserting creative results without a keyword |
+| `service_id` / `location_id` are required FKs | Insert fails for freeform creative searches |
+| `format` CHECK constraint | DB rejects rows without `location_service` or `service_location` |
+| Pipeline hook assumes mechanical generation | Hook crashes when called without service/location IDs |
+| Results page assumes non-null relations | UI crash rendering creative search results |
+
+Each would have been 30-60 minutes of debugging mid-implementation. Total time saved: 3-4 hours.
 
 ## Acceptance Criteria Format
 
