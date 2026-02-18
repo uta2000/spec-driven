@@ -10,12 +10,12 @@ Features get brainstormed, then jump straight to code. Halfway through, you disc
 
 Six skills and an orchestrator that cover the full feature development lifecycle. Catch conflicts when they're cheap to fix — a line edit in a design doc instead of a code rewrite.
 
-spec-driven handles the **design and verification** phases. For **implementation and delivery**, it delegates to the [superpowers](https://github.com/anthropics/claude-code-superpowers) plugin — brainstorming, TDD, code review, worktrees, and PRs.
+spec-driven handles the **design and verification** phases. For **implementation and delivery**, it delegates to the [superpowers](https://github.com/obra/superpowers) plugin — brainstorming, TDD, code review, worktrees, and PRs.
 
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- [superpowers](https://github.com/anthropics/claude-code-superpowers) plugin (required companion — handles brainstorming, implementation planning, TDD, code review, worktrees, and PR workflow)
+- [superpowers](https://github.com/obra/superpowers) plugin (required companion — handles brainstorming, implementation planning, TDD, code review, worktrees, and PR workflow)
 
 ## Installation
 
@@ -33,7 +33,7 @@ claude plugins add spec-driven
 
 ```bash
 # Install superpowers first (if not already installed)
-claude plugins add https://github.com/anthropics/claude-code-superpowers
+claude plugins add https://github.com/obra/superpowers
 
 # Install spec-driven
 claude plugins add https://github.com/uta2000/spec-driven
