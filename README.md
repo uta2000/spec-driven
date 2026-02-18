@@ -110,6 +110,20 @@ spec-driven owns the design and verification phases. superpowers owns implementa
 |-----------|---------|
 | `task-verifier` | Runs PASS/FAIL/CANNOT_VERIFY checks with evidence |
 
+## Using Skills Standalone
+
+While `start-feature` is the recommended entry point, you can invoke any skill directly:
+
+```
+run design-verification on docs/plans/2024-03-15-notifications-design.md
+```
+
+```
+run verify-acceptance-criteria against the plan in docs/plans/
+```
+
+Standalone skills will auto-create `.spec-driven.yml` if it doesn't exist (same auto-discovery flow as `start-feature`). This is useful when you want to verify an existing design or check acceptance criteria without running the full lifecycle.
+
 ## Where These Fit in the Lifecycle
 
 ```
@@ -154,6 +168,8 @@ stack:
 gotchas:
   - "PostgREST caps all queries at 1000 rows without .range() pagination"
 ```
+
+**Should you commit this file?** Yes — `.spec-driven.yml` should be committed to your repo. It captures project-specific knowledge (especially gotchas) that benefits the whole team. It's not sensitive data and evolves with the project.
 
 **How it works:**
 - `platform` adjusts the lifecycle — mobile adds beta testing, app store review, required feature flags

@@ -94,6 +94,40 @@ Read `package.json` `dependencies` and `devDependencies`:
 | `diesel` | `diesel` |
 | `sqlx` | `sqlx` |
 
+### PHP (composer.json)
+
+| Package | Stack Entry |
+|---------|------------|
+| `laravel/framework` | `laravel` |
+| `symfony/framework-bundle` | `symfony` |
+| `slim/slim` | `slim` |
+| `doctrine/orm` | `doctrine` |
+
+### Java / Kotlin (build.gradle, build.gradle.kts, pom.xml)
+
+| Dependency | Stack Entry |
+|-----------|------------|
+| `org.springframework.boot` | `spring-boot` |
+| `io.quarkus` | `quarkus` |
+| `io.micronaut` | `micronaut` |
+| `io.ktor` | `ktor` |
+
+### C# / .NET (*.csproj, *.sln)
+
+| Package / Indicator | Stack Entry |
+|--------------------|------------|
+| `Microsoft.AspNetCore` | `aspnet` |
+| `Microsoft.EntityFrameworkCore` | `ef-core` |
+| `Blazor` in project SDK | `blazor` |
+
+### Elixir (mix.exs)
+
+| Dependency | Stack Entry |
+|-----------|------------|
+| `:phoenix` | `phoenix` |
+| `:ecto` | `ecto` |
+| `:absinthe` | `absinthe` |
+
 ### Flutter/Dart (pubspec.yaml)
 
 | Package | Stack Entry |
@@ -162,3 +196,4 @@ Only suggest additions — never remove entries the user explicitly declared.
 - **Monorepos:** If multiple `package.json` files exist, scan the root and immediate `packages/*/package.json` or `apps/*/package.json`. Combine all detected stacks.
 - **No dependency file:** If no `package.json`, `requirements.txt`, `Gemfile`, `go.mod`, etc. exists, fall back to file extension analysis (`.py` → Python, `.rb` → Ruby, etc.) and config file indicators.
 - **Ambiguous platform:** If both web and mobile indicators exist (e.g., Next.js + React Native in a monorepo), default to `cross-platform` and note the ambiguity.
+- **Empty stack detected:** If no stack entries are detected from any source, warn the user: "No frameworks or libraries detected. This may mean the project uses a stack not yet covered by auto-discovery, or the dependency files are in a non-standard location." Offer to let the user manually specify the stack, and proceed with an empty stack list rather than blocking.

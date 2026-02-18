@@ -10,6 +10,18 @@ Guide development work through the correct lifecycle steps, invoking the right s
 
 **Announce at start:** "Starting the feature lifecycle. Let me check project context and determine the right steps."
 
+## Pre-Flight Check
+
+Before starting, verify that the superpowers plugin is available. Attempt to invoke the `superpowers:brainstorming` skill — if it fails or is not found, stop and tell the user:
+
+```
+The superpowers plugin is required but doesn't appear to be installed.
+Install it first: claude plugins add superpowers
+Then re-run start-feature.
+```
+
+Do not proceed with the lifecycle if superpowers is missing — most steps depend on it.
+
 ## Purpose
 
 Ensure the lifecycle is followed from start to finish. Track which steps are complete, invoke the right skill at each stage, and do not advance until the current step is done.
@@ -32,7 +44,7 @@ Check for a `.spec-driven.yml` file in the project root.
 
 **If not found — auto-detect and create:**
 1. Detect platform from project structure (ios/, android/, Podfile, build.gradle, etc.)
-2. Detect stack from dependency files (package.json, requirements.txt, Gemfile, go.mod, Cargo.toml, pubspec.yaml) and config files (vercel.json, supabase/, firebase.json, etc.)
+2. Detect stack from dependency files (package.json, requirements.txt, Gemfile, go.mod, Cargo.toml, pubspec.yaml, composer.json, pom.xml, build.gradle, *.csproj, mix.exs) and config files (vercel.json, supabase/, firebase.json, etc.)
 3. Present detected context to user for confirmation:
    ```
    I detected the following project context:
