@@ -1,7 +1,7 @@
 ---
 name: design-verification
 description: This skill should be used when the user asks to "verify the design", "check the design against the codebase", "validate the design doc", "check for blockers", "will this design work", or after writing a design document to catch schema conflicts, type mismatches, and pipeline assumptions before implementation.
-tools: Read, Glob, Grep, Task, Bash, WebFetch, WebSearch, AskUserQuestion
+tools: Read, Glob, Grep, Task, Bash, Edit, WebFetch, WebSearch, AskUserQuestion
 ---
 
 # Design Verification
@@ -133,10 +133,10 @@ Adjust depth based on the design's scope:
 
 | Design Scope | Depth |
 |-------------|-------|
-| New page with new data model | Full checklist (all 13 categories) |
-| New API route, existing data model | Categories 1-3, 5, 7-8, 10-12 |
-| UI-only change, no schema changes | Categories 4-6, 9-10, 12-13 |
-| Configuration or env change | Categories 7, 10-12 |
+| New page with new data model | Full checklist (all 13 base categories + stack/platform/gotchas) |
+| New API route, existing data model | Categories 1-3, 5, 7-8, 10-12 + stack/platform/gotchas |
+| UI-only change, no schema changes | Categories 4-6, 9-10, 12-13 + platform/gotchas |
+| Configuration or env change | Categories 7, 10-12 + stack/gotchas |
 
 ## Quality Rules
 

@@ -140,5 +140,8 @@ Typical sections: Overview, User Flow, New Components, UI Adaptations, Scope
 ### Data Migration Feature
 Typical sections: Overview, Data Model Changes, Migration Requirements, Rollback Plan, Scope
 
+### Mobile Feature (iOS / Android / Cross-Platform)
+Typical sections: Overview, User Flow, Feature Flag Strategy, Rollback Plan, API Versioning, Device Compatibility, Data Model Changes, New Components, Migration Requirements, Scope
+
 ### Full-Stack Feature
 Typical sections: All sections as applicable

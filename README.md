@@ -8,7 +8,7 @@ Features get brainstormed, then jump straight to code. Halfway through, you disc
 
 ## The Solution
 
-Seven skills and an orchestrator that cover the full feature development lifecycle. Catch conflicts when they're cheap to fix — a line edit in a design doc instead of a code rewrite.
+Six skills and an orchestrator that cover the full feature development lifecycle. Catch conflicts when they're cheap to fix — a line edit in a design doc instead of a code rewrite.
 
 ## Project Context
 

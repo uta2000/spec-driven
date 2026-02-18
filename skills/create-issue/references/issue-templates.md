@@ -201,6 +201,68 @@ See `docs/plans/YYYY-MM-DD-feature-name.md`
 - [Deploy ordering (migrate before or after code deploy)]
 ```
 
+## Mobile Feature
+
+```markdown
+## Summary
+
+[2-3 sentences describing what the feature does and why]
+
+**Example:** [Concrete input → output example]
+
+## Design Doc
+
+See `docs/plans/YYYY-MM-DD-feature-name.md`
+
+## User Flow
+
+1. **[Step name]** — [description]
+2. **[Step name]** — [description]
+3. **[Step name]** — [description]
+
+## Feature Flag Strategy
+
+- **Flag name:** `feature_[name]`
+- **Default:** off
+- **Kill switch:** [how to disable without app update]
+- **Rollout plan:** [percentage-based or group-based]
+
+## Rollback Plan
+
+- **API versioning:** [how old app versions interact with new backend]
+- **Data compatibility:** [can old versions read data written by new version]
+- **Kill switch behavior:** [what happens when flag is turned off mid-session]
+
+## Data Model Changes
+
+[If any tables need modification]
+
+## New Components
+
+- **[Component]** — [purpose]
+
+## Device Compatibility
+
+- **Minimum OS:** iOS [X] / Android [X]
+- **Screen sizes:** [phone / tablet / both]
+- **Accessibility:** [VoiceOver / TalkBack considerations]
+
+## Beta Testing Requirements
+
+- [ ] TestFlight / Play Console internal testing
+- [ ] Device matrix coverage: [list devices]
+- [ ] Offline behavior verified
+- [ ] Background/foreground transitions tested
+
+## Key Decisions
+
+- [Decision and rationale]
+
+## Implementation Notes
+
+- [Technical constraint or gotcha]
+```
+
 ## Issue Title Conventions
 
 Keep titles under 70 characters. Format:
