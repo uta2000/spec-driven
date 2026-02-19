@@ -2,6 +2,23 @@
 
 Additional verification checks when the project uses Supabase.
 
+## Context7 Documentation
+
+Query these libraries for current patterns before implementing. Requires the Context7 MCP plugin.
+
+| Library ID | Focus | When to Query |
+|-----------|-------|---------------|
+| `/websites/supabase` | Auth flows, SSR middleware, RLS policies, migrations, realtime | Before writing auth code, middleware, or RLS policies |
+| `/supabase/supabase-js` | Typed queries, filters, RPC, pagination, inserts/updates | Before writing any Supabase queries |
+| `/supabase/ssr` | `createServerClient`, cookie handling, server/client split | Before setting up Supabase client in SSR frameworks |
+| `/supabase/cli` | Migrations, type generation, local dev | Before writing migrations or generating types |
+
+### Key Patterns to Look Up
+- Two clients needed: browser (`createBrowserClient`) + server (`createServerClient` with `getAll`/`setAll`)
+- Typed queries: `Database['public']['Tables']['table_name']['Row' | 'Insert' | 'Update']`
+- Pagination: `.range(start, end)` with `{ count: 'exact' }` (not `.limit()`)
+- Auth middleware: `updateSession()` pattern for token refresh
+
 ## Verification Checks
 
 ### PostgREST Query Limits

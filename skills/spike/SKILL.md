@@ -19,6 +19,8 @@ Run time-boxed technical experiments to de-risk unknowns before committing to a 
 
 **Project context:** Check for `.spec-driven.yml` in the project root. If found, load the `stack` entries and check for matching stack-specific assumption patterns at `../../references/stacks/{name}.md`. Each stack file includes a "Risky Assumptions (for Spike)" section with common assumptions and how to test them.
 
+**Documentation context:** If `.spec-driven.yml` has a `context7` field, query relevant Context7 libraries before designing experiments. Current documentation often reveals known limitations, deprecated APIs, or undocumented behaviors that inform what to test. For example, querying Context7 for "Supabase bulk insert limits" before spiking a batch data import can surface rate limits or payload size constraints documented in the official guides.
+
 ## When to Skip
 
 - The feature uses only well-understood, previously tested patterns in the codebase
@@ -53,9 +55,20 @@ Which ones should I validate? (Recommend: [highest risk items])
 
 Use `AskUserQuestion` to confirm which assumptions to test.
 
+### Step 1b: Check Documentation First
+
+Before designing experiments, check if existing documentation already answers the question:
+
+1. If `.spec-driven.yml` has a `context7` field, query relevant Context7 libraries for the assumptions being tested
+2. Check stack reference files at `../../references/stacks/{name}.md` for known gotchas related to the assumptions
+3. If documentation clearly confirms or denies an assumption with evidence (code examples, explicit limits), mark it as CONFIRMED_BY_DOCS or DENIED_BY_DOCS — no experiment needed
+4. If documentation is ambiguous or missing, proceed to experiment
+
+This step avoids spending time testing things that are already documented. But documentation alone is not sufficient for performance claims or version-specific behavior — those still need experiments.
+
 ### Step 2: Design Minimal Experiments
 
-For each selected assumption, design the smallest possible test that confirms or denies it. Prefer experiments that:
+For each selected assumption that was not resolved by documentation, design the smallest possible test that confirms or denies it. Prefer experiments that:
 - Run in under 2 minutes
 - Require no setup beyond what exists in the project
 - Produce clear pass/fail evidence

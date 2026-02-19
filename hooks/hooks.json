@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(!/\\/src\\/.*\\.(ts|tsx|js|jsx|py|rb|go|rs)$/.test(f))process.exit(0);if(/\\.(test|spec|d)\\.(ts|tsx|js|jsx)$/.test(f)||/\\/types\\//.test(f))process.exit(0);if(!require('fs').existsSync('.spec-driven.yml'))process.exit(0);const yml=require('fs').readFileSync('.spec-driven.yml','utf8');if(!yml.includes('context7:'))process.exit(0);process.stderr.write('[spec-driven] REQUIRED: Before creating this source file, you MUST have queried Context7 docs for current patterns. Read the context7 field in .spec-driven.yml for library IDs, then query relevant libraries using mcp__plugin_context7_context7__query-docs.')}catch{}process.exit(0)})\""
+          }
+        ],
+        "description": "Remind to check Context7 docs before creating new source files (only when context7 is configured)"
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write",
@@ -7,8 +19,23 @@
           {
             "type": "command",
             "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -q 'plans/.*\\.md'; then echo 'ACTION REQUIRED: Plan file written. Run verify-plan-criteria to validate acceptance criteria coverage before proceeding.'; fi"
+          },
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(!/\\/src\\/.*\\.(ts|tsx|js|jsx)$/.test(f)||/\\.(test|spec|d)\\.(ts|tsx|js|jsx)$/.test(f)||/\\/types\\//.test(f))process.exit(0);const c=require('fs').readFileSync(f,'utf8');const w=[];c.split('\\n').forEach((l,n)=>{if(/:\\s*any\\b/.test(l)&&!/\\/\\//.test(l.split('any')[0]))w.push('L'+(n+1)+': any type detected');if(/\\bas\\s+any\\b/.test(l)&&!/\\/\\//.test(l.split('as')[0]))w.push('L'+(n+1)+': unsafe type assertion (as any)');if(/console\\.(log|debug)\\(/.test(l)&&!/\\/\\//.test(l.split('console')[0]))w.push('L'+(n+1)+': console.log/debug left in code');if(/catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}/.test(l))w.push('L'+(n+1)+': empty catch block');});if(w.length)console.log('[spec-driven] Code quality warnings in '+f.split('/').pop()+':\\n'+w.join('\\n')+'\\nSee coding-standards.md for guidelines.')}catch{}process.exit(0)})\""
           }
-        ]
+        ],
+        "description": "Plan file reminder + anti-pattern detection for source files"
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const f=i.tool_input?.file_path||'';if(!/\\/src\\/.*\\.(ts|tsx|js|jsx)$/.test(f)||/\\.(test|spec|d)\\.(ts|tsx|js|jsx)$/.test(f)||/\\/types\\//.test(f))process.exit(0);const s=i.tool_input?.new_string||'';const w=[];s.split('\\n').forEach((l,n)=>{if(/:\\s*any\\b/.test(l)&&!/\\/\\//.test(l.split('any')[0]))w.push('any type detected');if(/\\bas\\s+any\\b/.test(l)&&!/\\/\\//.test(l.split('as')[0]))w.push('unsafe type assertion (as any)');if(/console\\.(log|debug)\\(/.test(l)&&!/\\/\\//.test(l.split('console')[0]))w.push('console.log/debug left in code');if(/catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}/.test(l))w.push('empty catch block');});if(w.length)console.log('[spec-driven] Code quality warnings in edited code ('+f.split('/').pop()+'):\\n'+w.map(x=>'- '+x).join('\\n')+'\\nSee coding-standards.md for guidelines.')}catch{}process.exit(0)})\""
+          }
+        ],
+        "description": "Anti-pattern detection for edited source files"
       }
     ],
     "SessionStart": [
@@ -16,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -f .spec-driven.yml ]; then echo 'SPEC-DRIVEN DEVELOPMENT ACTIVE: Use start-feature to begin any non-trivial work — it orchestrates the full lifecycle (design → verify → implement → ship). Rules: (1) Every task in an implementation plan MUST include **Acceptance Criteria:** with machine-verifiable - [ ] items. After writing a plan, run verify-plan-criteria. (2) Before claiming any task is complete, run verify-acceptance-criteria to mechanically check all criteria against the codebase.'; else echo 'SPEC-DRIVEN is installed. It helps you build features without mid-implementation surprises by adding a design and verification layer before you code. To start, just describe what you want to build: \"start feature: add user notifications\" -- spec-driven will auto-detect your tech stack, classify the scope, and walk you through the right steps. For a quick bug fix, just describe the problem — the lifecycle is lightweight: understand, fix, verify, commit.'; fi"
+            "command": "if [ -f .spec-driven.yml ]; then echo 'SPEC-DRIVEN DEVELOPMENT ACTIVE: Use start-feature to begin any non-trivial work — it orchestrates the full lifecycle (design → verify → implement → ship). Rules: (1) Every task in an implementation plan MUST include **Acceptance Criteria:** with machine-verifiable - [ ] items. After writing a plan, run verify-plan-criteria. (2) Before claiming any task is complete, run verify-acceptance-criteria to mechanically check all criteria against the codebase. (3) Before writing new code, query Context7 docs for current patterns — library IDs are in .spec-driven.yml under context7.'; else echo 'SPEC-DRIVEN is installed. It helps you build features without mid-implementation surprises by adding a design and verification layer before you code. To start, just describe what you want to build: \"start feature: add user notifications\" -- spec-driven will auto-detect your tech stack, resolve Context7 documentation libraries, classify the scope, and walk you through the right steps. For a quick bug fix, just describe the problem — the lifecycle is lightweight: understand, fix, verify, commit.'; fi"
           }
         ]
       }

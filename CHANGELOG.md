@@ -2,6 +2,33 @@
 
 All notable changes to the spec-driven plugin.
 
+## [1.6.0] - 2026-02-19
+
+### Added
+- **Context7 integration** for live documentation lookups during feature development
+- Context7 is now a **required plugin** (pre-flight check in start-feature, like superpowers)
+- New `context7` field in `.spec-driven.yml` schema — maps stack entries to Context7 library IDs
+- **Dynamic library resolution** — for every detected stack entry, calls Context7's `resolve-library-id` to find the best docs. Works with any technology, not just pre-built stacks.
+- Known mappings cache for 12 popular stacks: Next.js, Supabase, Vercel, Express, Django, FastAPI, Vue, Angular, Rails, Prisma, Stripe, Tailwind (skip API call for common stacks)
+- "Documentation lookup" step in start-feature lifecycle (between brainstorming and design document)
+- "Documentation Compliance" verification category (#17) in design-verification — checks design uses current patterns from official docs
+- PreToolUse hook on Write — reminds to check Context7 docs before creating new source files (only fires when `context7` is configured in `.spec-driven.yml`)
+- **PostToolUse anti-pattern detection** on Write and Edit — checks source files for `any` types, `as any` assertions, `console.log`/`console.debug`, and empty catch blocks. References coding-standards.md for guidelines.
+- Context7 Documentation sections in all stack reference files (next-js, supabase, vercel, react-native) with library IDs and key patterns
+- **`references/coding-standards.md`** — senior-engineer coding principles covering functions, error handling, DRY, types, separation of concerns, naming, comments, performance, and testing
+- **"Study Existing Patterns" step** — mandatory inline step before implementation that reads 2-3 existing files per area being modified, extracts patterns, and generates "How to Code This" notes per implementation task
+- **"Self-Review" step** — mandatory inline step after implementation that reviews all changed code against a 10-point checklist (function size, naming, error handling, types, DRY, pattern adherence, separation of concerns, guard clauses, debug artifacts, imports)
+- Spike skill now queries Context7 docs before designing experiments (Step 1b: Check Documentation First)
+
+### Changed
+- start-feature pre-flight check now verifies both superpowers AND Context7
+- start-feature step lists updated: Quick fix (6 steps), Small enhancement (13 steps), Feature (14 steps), Major feature (15 steps)
+- design-verification depth table updated to include doc compliance for API route designs
+- project-context-schema.md documents new `context7` field and how skills use it
+- auto-discovery.md includes Context7 library detection flow, known mappings (12 stacks), and examples for different tech stacks
+- README updated with Context7 requirements, installation, integration docs, coding standards, and new lifecycle steps
+- plugin.json keywords expanded with `context7`, `documentation`, `coding-standards`
+
 ## [1.5.0] - 2026-02-18
 
 ### Added

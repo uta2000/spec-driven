@@ -11,6 +11,13 @@ stack:
   - supabase           # Any technology name — matched against references/stacks/
   - next-js
   - vercel
+context7:              # Optional: Context7 library IDs for live documentation lookup
+  next-js: /vercel/next.js
+  supabase:
+    - /websites/supabase
+    - /supabase/supabase-js
+    - /supabase/ssr
+  vercel: /vercel/next.js
 gotchas:
   - "PostgREST caps all queries at 1000 rows without .range() pagination"
   - "WhoisFreaks bulk endpoint has separate RPM bucket from single-domain"
@@ -46,6 +53,32 @@ Common stack values with pre-built reference files:
 - `react-native` — Native bridges, platform-specific code, Hermes engine
 - `vercel` — Serverless limits, Edge constraints, cold starts
 
+### `context7`
+
+Optional mapping of stack entries to [Context7](https://context7.com/) library IDs. When present, skills query Context7 for up-to-date documentation and code examples before designing or implementing features.
+
+**Auto-populated:** During auto-detection (Step 0 of `start-feature`), known stack entries are mapped to their Context7 library IDs using the table in `auto-discovery.md`. The user is shown the mappings and can adjust.
+
+**Manual additions:** Users can add Context7 library IDs for technologies not covered by auto-detection. Use `mcp__plugin_context7_context7__resolve-library-id` to find the correct ID.
+
+**Format:** Each key is a stack name. Values can be a single library ID (string) or a list of library IDs (for stacks that span multiple Context7 libraries):
+
+```yaml
+context7:
+  next-js: /vercel/next.js              # Single library
+  supabase:                              # Multiple libraries
+    - /websites/supabase
+    - /supabase/supabase-js
+    - /supabase/ssr
+```
+
+**Requires:** The Context7 MCP plugin must be installed (`context7@claude-plugins-official`). If Context7 is not available, skills skip documentation lookups and proceed normally.
+
+**How skills use this:**
+- `start-feature` queries relevant libraries during the documentation lookup step
+- `design-verification` checks that the design follows current patterns from official docs
+- `design-document` can reference current API patterns during design authoring
+
 ### `gotchas`
 
 Free-text list of project-specific pitfalls learned from past bugs. These are injected into every design verification as mandatory checks.
@@ -72,9 +105,11 @@ Free-text list of project-specific pitfalls learned from past bugs. These are in
 - **Reads** context at lifecycle start. Adjusts step list based on platform and stack.
 - **Creates** `.spec-driven.yml` via auto-detection if it doesn't exist.
 - **Updates** stack list if new dependencies are detected that aren't declared.
+- **Reads** `context7` field to query relevant documentation before the design phase.
 
 ### design-verification (reads + writes)
 - **Reads** base checklist (13 categories), stack-specific checks, platform-specific checks, and project gotchas.
+- **Reads** `context7` field to verify design uses current patterns from official docs.
 - **Writes** new gotchas discovered during verification (FAIL/WARNING findings that represent reusable pitfalls).
 
 ### spike (reads + writes)

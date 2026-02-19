@@ -2,6 +2,20 @@
 
 Additional verification checks when the project uses Next.js (App Router).
 
+## Context7 Documentation
+
+Query these libraries for current patterns before implementing. Requires the Context7 MCP plugin.
+
+| Library ID | Focus | When to Query |
+|-----------|-------|---------------|
+| `/vercel/next.js` | App Router, server components, server actions, caching, data fetching | Before writing any server/client components, API routes, or middleware |
+
+### Key Patterns to Look Up
+- Server component vs client component boundaries (`use client` directive)
+- Server Actions: error handling with `useActionState`, Zod validation, `revalidatePath()`
+- Data fetching: `cache: 'no-store'` vs `revalidate` vs `force-cache`
+- Middleware: auth token refresh, route protection patterns
+
 ## Verification Checks
 
 ### Server vs Client Boundaries

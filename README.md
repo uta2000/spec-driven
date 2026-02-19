@@ -1,6 +1,6 @@
 # spec-driven
 
-A Claude Code plugin that enforces discipline across the feature development lifecycle — from design through implementation to verification. Context-aware: adapts to your platform (web, iOS, Android) and tech stack (Supabase, Next.js, React Native, etc.).
+A Claude Code plugin that enforces discipline across the feature development lifecycle — from design through implementation to verification. Context-aware: adapts to your platform (web, iOS, Android) and tech stack, and queries up-to-date documentation via [Context7](https://context7.com/) to ensure code follows current best practices.
 
 ## The Problem
 
@@ -10,20 +10,22 @@ Features get brainstormed, then jump straight to code. Halfway through, you disc
 
 Six skills and an orchestrator that cover the full feature development lifecycle. Catch conflicts when they're cheap to fix — a line edit in a design doc instead of a code rewrite.
 
-spec-driven handles the **design and verification** phases. For **implementation and delivery**, it delegates to the [superpowers](https://github.com/obra/superpowers) plugin — brainstorming, TDD, code review, worktrees, and PRs.
+spec-driven handles the **design and verification** phases. For **implementation and delivery**, it delegates to the [superpowers](https://github.com/obra/superpowers) plugin — brainstorming, TDD, code review, worktrees, and PRs. For **documentation lookups**, it uses [Context7](https://context7.com/) to query current patterns from official docs before writing code.
 
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- [superpowers](https://github.com/obra/superpowers) plugin (required companion — handles brainstorming, implementation planning, TDD, code review, worktrees, and PR workflow)
+- [superpowers](https://github.com/obra/superpowers) plugin (required — handles brainstorming, implementation planning, TDD, code review, worktrees, and PR workflow)
+- [Context7](https://marketplace.claude.ai/plugin/context7) MCP plugin (required — provides live documentation lookups for any tech stack during design and implementation)
 
 ## Installation
 
 ### From the marketplace
 
 ```bash
-# Install superpowers first (if not already installed)
+# Install required plugins first
 claude plugins add superpowers
+claude plugins add context7
 
 # Install spec-driven
 claude plugins add spec-driven
@@ -32,8 +34,9 @@ claude plugins add spec-driven
 ### From GitHub
 
 ```bash
-# Install superpowers first (if not already installed)
+# Install required plugins first
 claude plugins add https://github.com/obra/superpowers
+claude plugins add context7
 
 # Install spec-driven
 claude plugins add https://github.com/uta2000/spec-driven
@@ -41,7 +44,7 @@ claude plugins add https://github.com/uta2000/spec-driven
 
 ### Per-project (manual)
 
-Copy the `agents/`, `skills/`, `hooks/`, and `references/` directories into your project's `.claude/` directory. You still need the superpowers plugin installed separately.
+Copy the `agents/`, `skills/`, `hooks/`, and `references/` directories into your project's `.claude/` directory. You still need the superpowers and context7 plugins installed separately.
 
 ## Quick Start
 
@@ -53,29 +56,33 @@ start feature: add user notifications
 
 spec-driven will:
 1. Scan your project files and auto-detect your platform and tech stack
-2. Create a `.spec-driven.yml` with your project context (first time only)
-3. Classify the scope (quick fix → major feature)
-4. Walk you through the right steps — brainstorm, design, verify, implement, ship
+2. Resolve Context7 documentation libraries for each detected technology
+3. Create a `.spec-driven.yml` with your project context (first time only)
+4. Classify the scope (quick fix → major feature)
+5. Walk you through the right steps — brainstorm, look up docs, design, verify, implement, ship
 
 The lifecycle adds ~20-30 minutes of upfront design but typically saves 2-4 hours of mid-implementation debugging per feature.
 
 For a quick fix, just say what's broken — the lifecycle is 4 steps: understand, fix (TDD), verify, PR.
 
-## How It Works with Superpowers
+## How It Works with Superpowers and Context7
 
-spec-driven owns the design and verification phases. superpowers owns implementation and delivery. The `start-feature` orchestrator invokes both:
+spec-driven owns the design and verification phases. superpowers owns implementation and delivery. Context7 provides live documentation lookups. The `start-feature` orchestrator coordinates all three:
 
-| Lifecycle Step | Plugin | Skill |
-|---------------|--------|-------|
+| Lifecycle Step | Plugin | Skill / Tool |
+|---------------|--------|-------------|
 | Brainstorm | superpowers | `brainstorming` |
-| Spike / PoC | **spec-driven** | `spike` |
+| Spike / PoC | **spec-driven** | `spike` (queries Context7 docs before experiments) |
+| Documentation lookup | **Context7** | `resolve-library-id` + `query-docs` |
 | Design document | **spec-driven** | `design-document` |
-| Design verification | **spec-driven** | `design-verification` |
+| Design verification | **spec-driven** + **Context7** | `design-verification` (includes doc compliance check) |
 | Create issue | **spec-driven** | `create-issue` |
 | Implementation plan | superpowers | `writing-plans` |
 | Verify plan criteria | **spec-driven** | `verify-plan-criteria` |
 | Worktree setup | superpowers | `using-git-worktrees` |
+| Study existing patterns | **spec-driven** (inline) | Reads codebase conventions, generates "How to Code This" notes |
 | Implement (TDD) | superpowers | `test-driven-development` |
+| Self-review | **spec-driven** (inline) | Reviews code against `coding-standards.md` checklist |
 | Code review | superpowers | `requesting-code-review` |
 | Final verification | **spec-driven** + superpowers | `verify-acceptance-criteria` + `verification-before-completion` |
 | Commit and PR | superpowers | `finishing-a-development-branch` |
@@ -129,29 +136,34 @@ Skills that need project context (`design-verification`, `spike`) will auto-crea
 ```
  1. Idea
  2. Brainstorming                  ← superpowers:brainstorming
- 3. Spike / PoC                    ← spike
- 4. Design Document                ← design-document
- 5. Design Verification            ← design-verification (+ stack/platform checks)
- 6. GitHub Issue                   ← create-issue
- 7. Implementation Plan            ← superpowers:writing-plans
- 8. Plan Criteria Check            ← verify-plan-criteria
- 9. Worktree Setup                 ← superpowers:using-git-worktrees
-10. Implementation (TDD)           ← superpowers:test-driven-development
-10b. Device Matrix Testing         ← mobile only
-11. Code Review                    ← superpowers:requesting-code-review
-12. Final Verification             ← verify-acceptance-criteria + superpowers:verification-before-completion
-12b. Beta Testing                  ← mobile only (TestFlight / Play Console)
-13. PR / Merge                     ← superpowers:finishing-a-development-branch
-13b. App Store Review              ← mobile only
-14. Deploy
+ 3. Spike / PoC                    ← spike (queries Context7 docs first)
+ 4. Documentation Lookup           ← Context7 (resolve-library-id + query-docs)
+ 5. Design Document                ← design-document
+ 6. Design Verification            ← design-verification (+ stack/platform/doc compliance checks)
+ 7. GitHub Issue                   ← create-issue
+ 8. Implementation Plan            ← superpowers:writing-plans
+ 9. Plan Criteria Check            ← verify-plan-criteria
+10. Worktree Setup                 ← superpowers:using-git-worktrees
+11. Study Existing Patterns        ← inline (reads codebase, generates "How to Code This" notes)
+12. Implementation (TDD)           ← superpowers:test-driven-development
+12b. Device Matrix Testing         ← mobile only
+13. Self-Review                    ← inline (coding-standards.md checklist)
+14. Code Review                    ← superpowers:requesting-code-review
+15. Final Verification             ← verify-acceptance-criteria + superpowers:verification-before-completion
+15b. Beta Testing                  ← mobile only (TestFlight / Play Console)
+16. PR / Merge                     ← superpowers:finishing-a-development-branch
+16b. App Store Review              ← mobile only
+17. Deploy
 ```
 
 ## Hooks
 
 | Hook | Trigger | Action |
 |------|---------|--------|
-| SessionStart | Every session | Injects spec-driven conventions into context |
+| PreToolUse (Write) | New source file being created | Reminds to check Context7 docs before writing code (only when `context7` is configured) |
 | PostToolUse (Write) | Plan file written to `plans/*.md` | Reminds to run `verify-plan-criteria` |
+| PostToolUse (Write/Edit) | Source file written or edited | Anti-pattern detection: flags `any` types, `as any` assertions, `console.log/debug`, empty catch blocks |
+| SessionStart | Every session | Injects spec-driven conventions into context |
 | Stop | Session ending | Blocks if code was implemented without running `verify-acceptance-criteria` |
 
 ## Project Context
@@ -165,6 +177,13 @@ stack:
   - supabase
   - next-js
   - vercel
+context7:              # Context7 library IDs for live doc lookups
+  next-js: /vercel/next.js
+  supabase:
+    - /websites/supabase
+    - /supabase/supabase-js
+    - /supabase/ssr
+  vercel: /vercel/next.js
 gotchas:
   - "PostgREST caps all queries at 1000 rows without .range() pagination"
 ```
@@ -174,9 +193,12 @@ gotchas:
 **How it works:**
 - `platform` adjusts the lifecycle — mobile adds beta testing, app store review, required feature flags
 - `stack` loads stack-specific verification checks during design verification
+- `context7` maps each stack to Context7 library IDs — skills query these for current patterns before designing and implementing
 - `gotchas` are injected into every verification — project-specific pitfalls learned from past bugs
 
-**Auto-discovery:** On first run, `start-feature` scans your project files and presents detected context for confirmation. On subsequent runs, it cross-checks for new dependencies and suggests additions.
+**Auto-discovery:** On first run, `start-feature` scans your project files, detects the stack, and resolves Context7 library IDs for each detected technology. It presents the full context for confirmation. On subsequent runs, it cross-checks for new dependencies and suggests additions.
+
+**Context7 resolution:** For every detected stack entry, spec-driven calls Context7's `resolve-library-id` to find the best documentation library. Well-known stacks (Next.js, Supabase, Vercel) use pre-verified mappings. All other stacks are resolved dynamically — this means spec-driven works with **any technology** Context7 has documentation for (Django, Rails, FastAPI, Vue, Angular, Stripe, Prisma, etc.).
 
 **Gotcha write-back:** When `design-verification` finds a reusable pitfall or `spike` discovers a denied assumption that could affect future features, the skill offers to add it to your gotchas list automatically. The file gets smarter over time without manual curation.
 
@@ -190,6 +212,34 @@ gotchas:
 | `vercel` | Serverless limits, Edge Function constraints, build time, cold starts |
 
 **Unknown stacks:** If no pre-built reference exists, skills research gotchas dynamically via web search and the project's own documentation.
+
+### Coding Standards and Code Quality
+
+spec-driven enforces senior-engineer code quality through three layers:
+
+1. **Study Existing Patterns** (before implementation) — Reads 2-3 existing files per area being modified, extracts conventions, and generates per-task "How to Code This" notes that map implementation tasks to specific codebase patterns
+2. **Self-Review** (after implementation) — Reviews all changed code against a 10-point checklist: function size (≤30 lines), naming conventions, error handling, type safety (no `any`), DRY, pattern adherence, separation of concerns, guard clauses (≤3 nesting levels), debug artifacts, import organization
+3. **Anti-pattern hooks** (real-time) — PostToolUse hooks on Write and Edit that flag `any` types, `as any` assertions, `console.log/debug`, and empty catch blocks in source files as they're written
+
+All three reference `references/coding-standards.md` — a comprehensive guide covering functions, error handling, DRY, TypeScript types, separation of concerns, naming, comments, performance, and testing. Stack-specific standards (Next.js, Supabase, React) are included.
+
+### Context7 Documentation Integration
+
+Context7 provides live documentation lookups for any technology, ensuring code follows current best practices even when frameworks release breaking changes or deprecate APIs.
+
+**How it works:**
+
+1. During auto-detection, spec-driven resolves Context7 library IDs for each stack entry
+2. Before writing the design document, the "Documentation lookup" step queries relevant libraries for current patterns
+3. During design verification, the "Documentation Compliance" check (category #17) verifies the design uses current patterns
+4. A PreToolUse hook reminds about doc lookups before creating new source files
+
+**Works with any stack:** Context7 hosts docs for thousands of libraries. Even if spec-driven doesn't have a pre-built stack reference file (e.g., for Django or Stripe), it can still resolve and query Context7 documentation dynamically.
+
+**Example — what doc lookups catch:**
+- Supabase deprecated `auth-helpers` in favor of `@supabase/ssr` — Context7 docs show the new `createServerClient` pattern
+- Next.js Server Actions should return `{ errors }` objects, not throw — Context7 docs show the `useActionState` pattern
+- A library changed its API between versions — Context7 has the current version's patterns
 
 ### Platform Lifecycle Differences
 
@@ -263,9 +313,11 @@ Verdict: VERIFIED (2/3 pass, 1 requires manual verification)
 To add support for a new tech stack:
 
 1. Create `references/stacks/{stack-name}.md`
-2. Include sections: Verification Checks, Common Gotchas, Risky Assumptions (for Spike)
-3. Follow the format of existing stack files (e.g., `references/stacks/supabase.md`)
-4. Submit a PR
+2. Include sections: Context7 Documentation, Verification Checks, Common Gotchas, Risky Assumptions (for Spike)
+3. For the Context7 section, use `resolve-library-id` to find the best library IDs, and list key patterns to look up
+4. Follow the format of existing stack files (e.g., `references/stacks/supabase.md`)
+5. If the stack has well-known Context7 library IDs, add them to the Known Mappings table in `references/auto-discovery.md`
+6. Submit a PR
 
 ## License
 

@@ -2,6 +2,20 @@
 
 Additional verification checks when the project uses React Native.
 
+## Context7 Documentation
+
+Query these libraries for current patterns before implementing. Requires the Context7 MCP plugin. Use `mcp__plugin_context7_context7__resolve-library-id` to find the best library ID for the specific React Native libraries in use (e.g., navigation, state management).
+
+| Library ID | Focus | When to Query |
+|-----------|-------|---------------|
+| (resolve dynamically) | React Native core, navigation, native modules | Before writing platform-specific code or native integrations |
+
+### Key Patterns to Look Up
+- Navigation patterns (React Navigation vs Expo Router)
+- Native module linking and Hermes compatibility
+- Platform-specific code patterns (`.ios.tsx` / `.android.tsx` vs `Platform.select()`)
+- Offline storage choices (AsyncStorage limits vs SQLite vs MMKV)
+
 ## Verification Checks
 
 ### Native Bridge & Compatibility

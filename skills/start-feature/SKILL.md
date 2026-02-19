@@ -12,7 +12,11 @@ Guide development work through the correct lifecycle steps, invoking the right s
 
 ## Pre-Flight Check
 
-Before starting, verify that the superpowers plugin is available. Check for its presence by looking for superpowers skills in the loaded skill list — do NOT invoke a superpowers skill just to test availability. If superpowers is not found, stop and tell the user:
+Before starting, verify required and recommended plugins are available.
+
+### superpowers (required)
+
+Check for its presence by looking for superpowers skills in the loaded skill list — do NOT invoke a superpowers skill just to test availability. If superpowers is not found, stop and tell the user:
 
 ```
 The superpowers plugin is required but doesn't appear to be installed.
@@ -21,6 +25,18 @@ Then re-run start-feature.
 ```
 
 Do not proceed with the lifecycle if superpowers is missing — most steps depend on it.
+
+### Context7 (required)
+
+Check for the Context7 MCP plugin by looking for `mcp__plugin_context7_context7__resolve-library-id` in the available tools (use ToolSearch if needed). If Context7 is not found, warn the user:
+
+```
+The Context7 plugin is required for documentation lookups but doesn't appear to be installed.
+Install it: claude plugins add context7
+Without it, spec-driven cannot query up-to-date library documentation during design and implementation.
+```
+
+Do not proceed with the lifecycle if Context7 is missing — documentation lookups are a core part of the design phase. The `context7` field in `.spec-driven.yml` will not be populated, and the documentation lookup step, documentation compliance verification, and PreToolUse hook will all be non-functional.
 
 ## Purpose
 
@@ -33,7 +49,7 @@ Ensure the lifecycle is followed from start to finish. Track which steps are com
 Check for a `.spec-driven.yml` file in the project root.
 
 **If found:**
-1. Read it and extract `platform`, `stack`, and `gotchas`
+1. Read it and extract `platform`, `stack`, `context7`, and `gotchas`
 2. Cross-check against auto-detected stack (see `../../references/auto-discovery.md`). If new dependencies are detected that aren't declared, suggest additions:
    ```
    Your .spec-driven.yml declares: [supabase, next-js]
@@ -92,54 +108,65 @@ Based on scope AND platform, determine which steps apply. Create a todo list to 
 **Quick fix (all platforms):**
 ```
 - [ ] 1. Understand the problem
-- [ ] 2. Implement fix (TDD)
-- [ ] 3. Verify acceptance criteria
-- [ ] 4. Commit and PR
+- [ ] 2. Study existing patterns
+- [ ] 3. Implement fix (TDD)
+- [ ] 4. Self-review
+- [ ] 5. Verify acceptance criteria
+- [ ] 6. Commit and PR
 ```
 
 **Small enhancement:**
 ```
 - [ ] 1. Brainstorm requirements
-- [ ] 2. Design document
-- [ ] 3. Create issue
-- [ ] 4. Implementation plan
-- [ ] 5. Verify plan criteria
-- [ ] 6. Worktree setup
-- [ ] 7. Implement (TDD)
-- [ ] 8. Code review
-- [ ] 9. Final verification
-- [ ] 10. Commit and PR
+- [ ] 2. Documentation lookup (Context7)
+- [ ] 3. Design document
+- [ ] 4. Create issue
+- [ ] 5. Implementation plan
+- [ ] 6. Verify plan criteria
+- [ ] 7. Worktree setup
+- [ ] 8. Study existing patterns
+- [ ] 9. Implement (TDD)
+- [ ] 10. Self-review
+- [ ] 11. Code review
+- [ ] 12. Final verification
+- [ ] 13. Commit and PR
 ```
 
 **Feature:**
 ```
 - [ ] 1. Brainstorm requirements
-- [ ] 2. Design document
-- [ ] 3. Design verification
-- [ ] 4. Create issue
-- [ ] 5. Implementation plan
-- [ ] 6. Verify plan criteria
-- [ ] 7. Worktree setup
-- [ ] 8. Implement (TDD)
-- [ ] 9. Code review
-- [ ] 10. Final verification
-- [ ] 11. Commit and PR
-```
-
-**Major feature:**
-```
-- [ ] 1. Brainstorm requirements
-- [ ] 2. Spike / PoC (if risky unknowns)
+- [ ] 2. Documentation lookup (Context7)
 - [ ] 3. Design document
 - [ ] 4. Design verification
 - [ ] 5. Create issue
 - [ ] 6. Implementation plan
 - [ ] 7. Verify plan criteria
 - [ ] 8. Worktree setup
-- [ ] 9. Implement (TDD)
-- [ ] 10. Code review
-- [ ] 11. Final verification
-- [ ] 12. Commit and PR
+- [ ] 9. Study existing patterns
+- [ ] 10. Implement (TDD)
+- [ ] 11. Self-review
+- [ ] 12. Code review
+- [ ] 13. Final verification
+- [ ] 14. Commit and PR
+```
+
+**Major feature:**
+```
+- [ ] 1. Brainstorm requirements
+- [ ] 2. Spike / PoC (if risky unknowns)
+- [ ] 3. Documentation lookup (Context7)
+- [ ] 4. Design document
+- [ ] 5. Design verification
+- [ ] 6. Create issue
+- [ ] 7. Implementation plan
+- [ ] 8. Verify plan criteria
+- [ ] 9. Worktree setup
+- [ ] 10. Study existing patterns
+- [ ] 11. Implement (TDD)
+- [ ] 12. Self-review
+- [ ] 13. Code review
+- [ ] 14. Final verification
+- [ ] 15. Commit and PR
 ```
 
 **Mobile platform adjustments (ios, android, cross-platform):**
@@ -174,19 +201,153 @@ For each step, follow this pattern:
 |------|----------------|-----------------|
 | Brainstorm requirements | `superpowers:brainstorming` | Decisions on scope, approach, UX |
 | Spike / PoC | `spec-driven:spike` | Confirmed/denied assumptions |
+| Documentation lookup | No skill — inline step (see below) | Current patterns from official docs injected into context |
 | Design document | `spec-driven:design-document` | File at `docs/plans/YYYY-MM-DD-*.md` |
+| Study existing patterns | No skill — inline step (see below) | Understanding of codebase conventions for the areas being modified |
 | Design verification | `spec-driven:design-verification` | Blockers/gaps identified and fixed |
 | Create issue | `spec-driven:create-issue` | GitHub issue URL |
 | Implementation plan | `superpowers:writing-plans` | Numbered tasks with acceptance criteria |
 | Verify plan criteria | `spec-driven:verify-plan-criteria` | All tasks have verifiable criteria |
 | Worktree setup | `superpowers:using-git-worktrees` | Isolated worktree created |
 | Implement | `superpowers:test-driven-development` | Code written with tests |
+| Self-review | No skill — inline step (see below) | Code verified against coding standards before formal review |
 | Code review | `superpowers:requesting-code-review` | Review feedback addressed |
 | Final verification | `spec-driven:verify-acceptance-criteria` + `superpowers:verification-before-completion` | All criteria PASS + lint/typecheck/build pass |
 | Commit and PR | `superpowers:finishing-a-development-branch` | PR URL |
 | Device matrix testing | No skill — manual step | Tested on min OS, small/large screens, slow network |
 | Beta testing | No skill — manual step | TestFlight / Play Console build tested by internal tester |
 | App store review | No skill — manual step | Submission accepted |
+
+### Study Existing Patterns Step (inline — no separate skill)
+
+This step runs after worktree setup and before implementation. It forces reading the actual codebase to understand how similar things are done before writing new code. This prevents "vibing" — writing code that works but doesn't follow the project's established patterns.
+
+**Process:**
+1. Read `../../references/coding-standards.md` to load the senior-engineer principles
+2. Identify the areas of the codebase that will be modified or extended (from the implementation plan)
+3. For each area, read 2-3 existing files that do similar things:
+   - Adding a new API route? Read 2 existing API routes in the same directory
+   - Adding a new component? Read 2 similar components
+   - Adding a new hook? Read existing hooks
+   - Adding a database query? Read existing query patterns
+4. Extract and document the patterns found:
+
+**Output format:**
+```
+## Existing Patterns Found
+
+### [Area: e.g., API Routes]
+- File structure: [how existing routes are organized]
+- Error handling: [how existing routes handle errors]
+- Response format: [what shape existing routes return]
+- Auth pattern: [how auth is checked]
+
+### [Area: e.g., Components]
+- State management: [local state vs hooks vs context]
+- Loading states: [how loading is shown]
+- Error states: [how errors are displayed]
+
+### Coding Standards to Follow
+- [List relevant items from coding-standards.md for this feature]
+```
+
+5. **Generate "How to Code This" notes** for each task in the implementation plan. For each task, write a brief note mapping the task to the patterns found:
+
+```
+## How to Code This (per task)
+
+### Task 1: [title from implementation plan]
+- Follow pattern from: [existing file that does something similar]
+- Error handling: [specific pattern to use, from the patterns found above]
+- Types: [specific types to import or generate]
+
+### Task 2: [title]
+- Follow pattern from: [existing file]
+- State management: [specific approach matching existing patterns]
+```
+
+6. Pass these patterns AND the "How to Code This" notes to the implementation step as mandatory context. **New code MUST follow these patterns unless there is a documented reason to deviate.**
+
+**Quality rules:**
+- Read at least 2 existing files per area being modified
+- Don't just skim — understand the pattern deeply enough to replicate it
+- If existing patterns conflict with coding-standards.md, note the conflict and follow the existing codebase pattern (consistency > purity)
+
+### Self-Review Step (inline — no separate skill)
+
+This step runs after implementation and before formal code review. It catches "it works but it's sloppy" problems before a reviewer sees them.
+
+**Process:**
+1. Read `../../references/coding-standards.md` to load the review criteria
+2. Get the full diff of all files changed during implementation: `git diff`
+3. Review every changed file against these criteria:
+
+**Self-Review Checklist:**
+- [ ] **Functions:** No function exceeds 30 lines. Each has a single responsibility.
+- [ ] **Naming:** All functions, variables, and files follow the naming conventions found in "Study Existing Patterns"
+- [ ] **Error handling:** No empty catch blocks. All external calls have error handling. Errors are typed.
+- [ ] **Types:** No `any` types. Types are narrow and specific. Generated types used for external data.
+- [ ] **DRY:** No duplicated logic. Shared utilities extracted. Constants defined for magic values.
+- [ ] **Pattern adherence:** New code follows the patterns documented in "Study Existing Patterns"
+- [ ] **Separation of concerns:** Data fetching is separate from rendering. Business logic is separate from I/O.
+- [ ] **Guard clauses:** No nesting deeper than 3 levels. Early returns used for error cases.
+- [ ] **No debug artifacts:** No `console.log`, `debugger`, or commented-out code left behind.
+- [ ] **Imports organized:** External, internal, relative, types — in that order.
+
+4. For each violation found, fix it immediately. Do not proceed to code review with known violations.
+5. If a violation cannot be fixed without significant rework, document it as tech debt with a TODO referencing the issue.
+
+**Output format:**
+```
+## Self-Review Results
+
+### Fixed
+- [file:line] Extracted 45-line function into 3 smaller functions
+- [file:line] Replaced `any` with proper type
+- [file:line] Added error handling for API call
+
+### Accepted (tech debt)
+- [file:line] TODO(#XX): [reason it can't be fixed now]
+
+### No Issues Found
+- [area] follows existing patterns
+```
+
+### Documentation Lookup Step (inline — no separate skill)
+
+This step queries Context7 for current patterns relevant to the feature being built. It runs between brainstorming and the design document to ensure the design uses up-to-date patterns.
+
+**Prerequisites:**
+- The Context7 MCP plugin must be available (`context7@claude-plugins-official`)
+- `.spec-driven.yml` must have a `context7` field (populated during auto-detection)
+
+**If Context7 is not available:** Skip this step silently. Announce: "Context7 not available — skipping documentation lookup. Proceeding with stack reference files only."
+
+**Process:**
+1. From the brainstorming output, identify which stack technologies are relevant to this feature (e.g., a new API route touches Next.js + Supabase; a UI change touches Next.js only)
+2. Read the `context7` field from `.spec-driven.yml` to get library IDs for relevant stacks
+3. Query each relevant Context7 library using `mcp__plugin_context7_context7__query-docs` with a focused query about the feature's specific needs:
+   - Example: building a new API route → query `/vercel/next.js` for "server actions error handling revalidation"
+   - Example: adding a new table → query `/supabase/supabase-js` for "typed queries insert RPC" and `/websites/supabase` for "RLS policies migration"
+4. Synthesize the results into a concise summary of recommended patterns
+5. Pass these patterns to the design document step as context
+
+**Output format:**
+```
+## Documentation Lookup Results
+
+### [Stack Name] — Current Patterns
+- [Pattern 1]: [code example or description]
+- [Pattern 2]: [code example or description]
+
+### Gotchas from Docs
+- [Any deprecation warnings or common mistakes found in the docs]
+```
+
+**Quality rules:**
+- Query at most 3 libraries per feature (focus on the most relevant)
+- Keep queries specific to the feature, not generic
+- If the docs contradict the stack reference file, note the discrepancy
 
 ### Step 4: Handle Interruptions
 

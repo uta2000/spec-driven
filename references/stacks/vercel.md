@@ -2,6 +2,19 @@
 
 Additional verification checks when the project deploys to Vercel.
 
+## Context7 Documentation
+
+Vercel-specific deployment patterns are found within the Next.js docs. Requires the Context7 MCP plugin.
+
+| Library ID | Focus | When to Query |
+|-----------|-------|---------------|
+| `/vercel/next.js` | Vercel deployment constraints, edge functions, serverless limits | Before configuring deployment, cron jobs, or edge functions |
+
+### Key Patterns to Look Up
+- Serverless function timeout and size limits per plan tier
+- Edge Runtime API restrictions (no `fs`, `child_process`, etc.)
+- Environment variable management across Development/Preview/Production
+
 ## Verification Checks
 
 ### Serverless Function Limits

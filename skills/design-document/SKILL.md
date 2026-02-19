@@ -25,6 +25,7 @@ Collect the inputs needed to write the document:
 
 1. **From the conversation:** Extract all decisions made during brainstorming — scope, approach, UX flow, data model, technical choices
 2. **From the codebase:** Explore existing patterns, tech stack, file structure, and conventions
+3. **From Context7 documentation lookup:** If a documentation lookup step was run before this skill (as part of the `start-feature` lifecycle), use the patterns and recommendations it produced. These represent current best practices from official docs and should inform the technical approach in the design. If no lookup was run, check `.spec-driven.yml` for a `context7` field and query relevant libraries directly.
 
 - Use Glob to find source files (e.g., `src/**/*.ts`, `src/**/*.tsx`)
 - Use Grep to search for relevant patterns in the existing codebase
