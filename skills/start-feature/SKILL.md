@@ -360,12 +360,30 @@ This step runs after worktree setup and before implementation. It forces reading
 - State management: [specific approach matching existing patterns]
 ```
 
-6. Pass these patterns AND the "How to Code This" notes to the implementation step as mandatory context. **New code MUST follow these patterns unless there is a documented reason to deviate.**
+6. **Flag anti-patterns in existing code (do not replicate):**
+   For each file read, assess whether it exhibits structural issues:
+   - File exceeds 300 lines → note as a god file; do not replicate the monolithic structure
+   - File mixes concerns (e.g., data fetching + rendering + business logic in one component) → note which concern to extract in new code
+   - File has imports that create circular dependencies → note and avoid in new code
+   - File duplicates logic found elsewhere → note the canonical location to import from instead
+
+   If anti-patterns are found, add an "Anti-Patterns to Avoid" section to the output:
+
+```
+### Anti-Patterns Found (do NOT replicate)
+- `src/components/SearchPage.tsx` (412 lines) — god component mixing fetch, transform, and render. New code should separate these into a hook (fetch/transform) and a component (render).
+- `src/lib/utils.ts` imports from `src/components/Badge.tsx` — inverted dependency. New utilities must not import from components.
+```
+
+   Pass these warnings alongside the positive patterns to the implementation step as mandatory context. New code must follow the good patterns AND avoid the flagged anti-patterns.
+
+7. Pass these patterns, the "How to Code This" notes, AND any anti-pattern warnings to the implementation step as mandatory context. **New code MUST follow these patterns unless there is a documented reason to deviate.**
 
 **Quality rules:**
 - Read at least 2 existing files per area being modified
 - Don't just skim — understand the pattern deeply enough to replicate it
 - If existing patterns conflict with coding-standards.md, note the conflict and follow the existing codebase pattern (consistency > purity)
+- If existing patterns conflict with structural quality (god files, tight coupling), document the conflict. New code follows the better pattern, not the existing anti-pattern. Note: this is the ONE exception to the "consistency > purity" rule — structural anti-patterns should not be replicated even for consistency.
 
 ### Self-Review Step (inline — no separate skill)
 
@@ -387,6 +405,10 @@ This step runs after implementation and before formal code review. It catches "i
 - [ ] **Guard clauses:** No nesting deeper than 3 levels. Early returns used for error cases.
 - [ ] **No debug artifacts:** No `console.log`, `debugger`, or commented-out code left behind.
 - [ ] **Imports organized:** External, internal, relative, types — in that order.
+- [ ] **No god files:** No new file exceeds 300 lines or handles more than 2-3 responsibilities.
+- [ ] **No circular dependencies:** New imports don't create cycles. If file A imports from file B, file B does not import (directly or transitively) from file A.
+- [ ] **Dependency direction:** New code depends on abstractions (interfaces, types, shared utilities), not on implementation details of other features.
+- [ ] **Duplication across files:** No logic block is copy-pasted from another file. If similar logic exists, import from the canonical source or extract a shared utility.
 
 4. For each violation found, fix it immediately. Do not proceed to code review with known violations.
 5. If a violation cannot be fixed without significant rework, document it as tech debt with a TODO referencing the issue.
