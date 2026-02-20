@@ -164,14 +164,15 @@ Based on scope AND platform, determine which steps apply. Create a todo list to 
 - [ ] 4. Create issue
 - [ ] 5. Implementation plan
 - [ ] 6. Verify plan criteria
-- [ ] 7. Worktree setup
-- [ ] 8. Study existing patterns
-- [ ] 9. Implement (TDD)
-- [ ] 10. Self-review
-- [ ] 11. Code review
-- [ ] 12. Generate CHANGELOG entry
-- [ ] 13. Final verification
-- [ ] 14. Commit and PR
+- [ ] 7. Commit planning artifacts
+- [ ] 8. Worktree setup
+- [ ] 9. Study existing patterns
+- [ ] 10. Implement (TDD)
+- [ ] 11. Self-review
+- [ ] 12. Code review
+- [ ] 13. Generate CHANGELOG entry
+- [ ] 14. Final verification
+- [ ] 15. Commit and PR
 ```
 
 **Feature:**
@@ -183,14 +184,15 @@ Based on scope AND platform, determine which steps apply. Create a todo list to 
 - [ ] 5. Create issue
 - [ ] 6. Implementation plan
 - [ ] 7. Verify plan criteria
-- [ ] 8. Worktree setup
-- [ ] 9. Study existing patterns
-- [ ] 10. Implement (TDD)
-- [ ] 11. Self-review
-- [ ] 12. Code review
-- [ ] 13. Generate CHANGELOG entry
-- [ ] 14. Final verification
-- [ ] 15. Commit and PR
+- [ ] 8. Commit planning artifacts
+- [ ] 9. Worktree setup
+- [ ] 10. Study existing patterns
+- [ ] 11. Implement (TDD)
+- [ ] 12. Self-review
+- [ ] 13. Code review
+- [ ] 14. Generate CHANGELOG entry
+- [ ] 15. Final verification
+- [ ] 16. Commit and PR
 ```
 
 **Major feature:**
@@ -203,14 +205,15 @@ Based on scope AND platform, determine which steps apply. Create a todo list to 
 - [ ] 6. Create issue
 - [ ] 7. Implementation plan
 - [ ] 8. Verify plan criteria
-- [ ] 9. Worktree setup
-- [ ] 10. Study existing patterns
-- [ ] 11. Implement (TDD)
-- [ ] 12. Self-review
-- [ ] 13. Code review
-- [ ] 14. Generate CHANGELOG entry
-- [ ] 15. Final verification
-- [ ] 16. Commit and PR
+- [ ] 9. Commit planning artifacts
+- [ ] 10. Worktree setup
+- [ ] 11. Study existing patterns
+- [ ] 12. Implement (TDD)
+- [ ] 13. Self-review
+- [ ] 14. Code review
+- [ ] 15. Generate CHANGELOG entry
+- [ ] 16. Final verification
+- [ ] 17. Commit and PR
 ```
 
 **Mobile platform adjustments (ios, android, cross-platform):**
@@ -252,6 +255,7 @@ For each step, follow this pattern:
 | Create issue | `spec-driven:create-issue` | GitHub issue URL. **If an issue number was detected in Step 1**, pass it to create-issue as the `existing_issue` context — the skill will update the existing issue instead of creating a new one. |
 | Implementation plan | `superpowers:writing-plans` | Numbered tasks with acceptance criteria. **Override:** After the plan is saved, always proceed with subagent-driven execution — do not present the execution choice to the user. Immediately invoke `superpowers:subagent-driven-development`. |
 | Verify plan criteria | `spec-driven:verify-plan-criteria` | All tasks have verifiable criteria |
+| Commit planning artifacts | No skill — inline step (see below) | Planning docs and config committed to base branch |
 | Worktree setup | `superpowers:using-git-worktrees` | Isolated worktree created |
 | Implement | `superpowers:subagent-driven-development` | Code written with tests, spec-reviewed, and quality-reviewed per task |
 | Self-review | No skill — inline step (see below) | Code verified against coding standards before formal review |
@@ -283,6 +287,30 @@ When invoking `superpowers:brainstorming` from this lifecycle, pass these format
 - The "Why this matters" line should explain what downstream impact the choice has (e.g., "this determines whether validation errors surface during editing or only at commit time")
 - Keep it concise — one line for the explanation, one line per option
 - If there is no clear recommendation, say "*No strong preference — depends on [factor]*" instead of forcing a pick
+
+### Commit Planning Artifacts Step (inline — no separate skill)
+
+This step runs after verify-plan-criteria and before worktree setup. It commits design documents and project config to the base branch so the worktree inherits them via git history, preventing untracked file clutter.
+
+**Process:**
+1. Check if there are planning artifacts to commit:
+   ```bash
+   git status --porcelain docs/plans/*.md .spec-driven.yml 2>/dev/null
+   ```
+2. If no files are reported (empty output), skip the step: "No planning artifacts to commit — skipping."
+3. Stage the planning artifacts:
+   ```bash
+   git add docs/plans/*.md .spec-driven.yml
+   ```
+4. Commit with a descriptive message using the feature name from Step 1:
+   ```bash
+   git commit -m "docs: add design and implementation plan for [feature-name]"
+   ```
+
+**Edge cases:**
+- **`.spec-driven.yml` already tracked and unchanged** — `git add` is a no-op for unchanged tracked files, so this is safe
+- **No plan files exist** — handled by the guard check in step 1
+- **Only `.spec-driven.yml` changed (no plan docs)** — still commits; the file should be tracked regardless
 
 ### Study Existing Patterns Step (inline — no separate skill)
 
