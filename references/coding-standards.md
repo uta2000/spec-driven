@@ -99,6 +99,14 @@ interface SearchResult {
 - **UI state separate from server state:** Use React Query / SWR for server state, useState for UI state. Don't mix.
 - **Configuration separate from code:** API keys, URLs, thresholds go in environment variables or config objects, not inline.
 
+## Structural Quality
+
+- **No god objects:** A file, class, or component should have 2-3 responsibilities at most. If you need "and" more than twice to describe what it does, split it.
+- **Dependency direction matters:** High-level modules (pages, orchestrators) depend on low-level modules (utilities, data access), never the reverse. Shared types live in a common layer.
+- **No circular dependencies:** If module A imports from B, B must not import from A. Use dependency inversion (shared interface in a third module) to break cycles.
+- **Explicit boundaries:** Features should be self-contained directories. Cross-feature imports go through public APIs (barrel exports), not deep file paths.
+- **Colocation over centralization:** Put code where it's used. A utility used by one feature lives in that feature's directory, not in a global utils/ folder. Promote to shared only when a second consumer appears.
+
 ## Naming Conventions
 
 - **Files:** Match the primary export. `UserProfile.tsx` exports `UserProfile`. `search-utils.ts` exports search utilities.
