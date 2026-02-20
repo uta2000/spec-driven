@@ -11,6 +11,7 @@ const warnings = [];
 try { checkTypeScript(); } catch (e) { warnings.push(`[spec-driven] TypeScript check failed unexpectedly: ${e.message?.slice(0, 100)}`); }
 try { checkLint(); } catch (e) { warnings.push(`[spec-driven] Lint check failed unexpectedly: ${e.message?.slice(0, 100)}`); }
 try { checkTypeSync(); } catch (e) { warnings.push(`[spec-driven] Type-sync check failed unexpectedly: ${e.message?.slice(0, 100)}`); }
+try { checkTests(); } catch (e) { warnings.push(`[spec-driven] Test check failed unexpectedly: ${e.message?.slice(0, 100)}`); }
 
 if (failures.length > 0) {
   const report = failures.join('\n\n');
@@ -165,6 +166,65 @@ function checkDuplicateTypes(typesPathOverride) {
       }
     } catch {}
   }
+}
+
+// --- Check 4: Tests ---
+
+function checkTests() {
+  const cmd = detectTestCommand();
+  if (!cmd) return;
+
+  try {
+    execSync(cmd, {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 60000,
+      env: { ...process.env, CI: '1' },
+    });
+  } catch (e) {
+    if (e.killed && e.signal === 'SIGTERM') {
+      warnings.push('[spec-driven] Test suite timed out (60s) — skipping. Run tests manually.');
+      return;
+    }
+    if (e.code === 'ENOENT' || e.status === 127) {
+      warnings.push(`[spec-driven] Test command not found: "${cmd}". Ensure the tool is installed.`);
+      return;
+    }
+    const output = execOutput(e);
+    if (!output) {
+      failures.push(`[TEST] Test suite failed: ${e.message?.slice(0, 200) || 'exit code ' + e.status}`);
+    } else {
+      const lines = output.split('\n').slice(0, 20).join('\n  ');
+      failures.push(`[TEST] Test suite failed\n  ${lines}`);
+    }
+  }
+}
+
+function detectTestCommand() {
+  if (existsSync('package.json')) {
+    try {
+      const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+      const testScript = pkg.scripts?.test;
+      if (testScript && !testScript.includes('no test specified')) {
+        if (!existsSync('node_modules')) {
+          warnings.push('[spec-driven] node_modules not found — skipping test check. Run "npm install" first.');
+          return null;
+        }
+        return 'npm test';
+      }
+    } catch (e) {
+      warnings.push(`[spec-driven] Failed to parse package.json for test detection: ${e.message?.slice(0, 100) || 'unknown'}`);
+    }
+  }
+
+  if (existsSync('Cargo.toml')) return 'cargo test';
+  if (existsSync('go.mod')) return 'go test ./...';
+  if (existsSync('mix.exs')) return 'mix test';
+  if (existsSync('pyproject.toml') || existsSync('pytest.ini') || existsSync('setup.cfg') || existsSync('tox.ini')) {
+    return 'python -m pytest';
+  }
+
+  return null;
 }
 
 // --- Helpers ---
