@@ -121,6 +121,9 @@ Check for a `.spec-driven.yml` file in the project root.
    Does this look right? I'll save this to `.spec-driven.yml`.
    ```
 4. Use `AskUserQuestion` with options: "Looks correct", "Let me adjust"
+
+**YOLO behavior:** If YOLO mode is active, skip this question. Accept the detected context as-is and announce: `YOLO: Platform/stack detection → Accepted: [platform], [stack list]`
+
 5. Write `.spec-driven.yml` with confirmed values (gotchas starts empty — skills will populate it as they discover issues)
 
 See `../../references/auto-discovery.md` for the full detection rules.
@@ -159,6 +162,8 @@ Does this look right, or should I adjust the scope?
 ```
 
 Use `AskUserQuestion` to confirm. Options: the four scope levels.
+
+**YOLO behavior:** If YOLO mode is active, skip this question. Use the LLM's classification based on the scope criteria table above and announce: `YOLO: Scope classification → [selected scope]`
 
 ### Step 2: Build the Step List
 
@@ -580,6 +585,8 @@ If a version is detected, present it alongside `[Unreleased]` via `AskUserQuesti
 
 If no version detected, use `[Unreleased]` without asking.
 
+**YOLO behavior:** If YOLO mode is active, skip this question. Auto-select `[Unreleased]` and announce: `YOLO: CHANGELOG version heading → [Unreleased]`
+
 #### Phase 4: Generate entry
 
 Format the entry in Keep a Changelog format:
@@ -607,6 +614,8 @@ Present the generated entry to the user via `AskUserQuestion`:
 - **Option 1:** "Looks good — write it" — proceed to write
 - **Option 2:** "Let me edit" — user provides corrections in freeform text, entry is revised
 - **Option 3:** "Skip CHANGELOG" — announce risk: "No CHANGELOG entry will be included in this PR. You may want to add one manually." Proceed to next lifecycle step.
+
+**YOLO behavior:** If YOLO mode is active, skip this question. Auto-select "Looks good — write it" and announce: `YOLO: CHANGELOG entry → Accepted`
 
 #### Phase 6: Write to CHANGELOG.md
 
