@@ -2,6 +2,12 @@
 
 All notable changes to the spec-driven plugin.
 
+## [1.8.0] - 2026-02-20
+
+### Added
+- **Test suite check in quality gate** — Stop hook now runs the project's test suite (`npm test`, `cargo test`, `go test ./...`, `python -m pytest`, `mix test`) before ending a session. Failing tests BLOCK the session. Timeouts produce a warning instead of blocking. Projects without a test runner are skipped silently.
+- Stop hook timeout increased from 120s to 180s to accommodate test suite runs
+
 ## [1.7.0] - 2026-02-20
 
 ### Added
