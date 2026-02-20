@@ -21,6 +21,7 @@ context7:              # Optional: Context7 library IDs for live documentation l
 gotchas:
   - "PostgREST caps all queries at 1000 rows without .range() pagination"
   - "WhoisFreaks bulk endpoint has separate RPM bucket from single-domain"
+types_path: src/types/database.types.ts  # Optional: canonical generated types path
 ```
 
 ## Fields
@@ -99,6 +100,18 @@ Free-text list of project-specific pitfalls learned from past bugs. These are in
 - Include the fix pattern: "...without .range() pagination"
 - State the consequence: "causes silent data truncation with 200 OK"
 
+### `types_path`
+
+Optional path to the canonical generated types file (e.g., `src/types/database.types.ts`). Used by the Stop hook quality gate to check type freshness and detect duplicate type files in edge function directories.
+
+**When needed:** Only when the heuristic glob fails to find the generated types file. The quality gate checks common locations automatically: `src/types/`, `types/`, `lib/types/`, `lib/`, `app/types/`, `src/lib/`. If the file is in a non-standard location, set `types_path` explicitly.
+
+**Format:** Single file path relative to project root.
+
+```yaml
+types_path: src/types/database.types.ts
+```
+
 ## How Skills Use This File
 
 ### start-feature (reads + writes)
@@ -123,3 +136,7 @@ Adds platform-aware sections:
 
 ### create-issue (reads)
 Includes platform-relevant sections in the issue template.
+
+### quality-gate hook (reads)
+- **Reads** `stack` field to determine which type generators to check (supabase, prisma)
+- **Reads** `types_path` field to find the canonical generated types file

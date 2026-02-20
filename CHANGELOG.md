@@ -2,6 +2,25 @@
 
 All notable changes to the spec-driven plugin.
 
+## [1.7.0] - 2026-02-20
+
+### Added
+- **PostToolUse per-file lint hook** — runs ESLint or Biome on each source file after Write/Edit, providing immediate feedback to fix lint errors before continuing
+- **Stop quality gate hook** — blocks session end with combined report when any of these checks fail:
+  - **TypeScript type checking** (`tsc --noEmit`) — catches type errors across the full project
+  - **Full project lint** (`npm run lint` or direct linter detection) — enforces project lint rules
+  - **Type-sync: generated types freshness** — detects stale Supabase/Prisma generated types by regenerating and diffing
+  - **Type-sync: duplicate type detection** — finds `.types.ts` files in edge function directories that have drifted from the canonical source
+- External Node.js scripts (`hooks/scripts/lint-file.js`, `hooks/scripts/quality-gate.js`) for complex detection logic
+- Dynamic tool detection — checks `node_modules/.bin/` for installed tools before running; never lets `npx` download tools
+- Supabase instance guard — checks `supabase status` before `gen types --local`; skips gracefully if not running
+- New `types_path` field in `.spec-driven.yml` for overriding canonical types file location
+
+### Changed
+- Stop hook array ordering: quality gate runs first, acceptance-criteria check runs second
+- SessionStart message updated to mention enforcement hooks
+- PostToolUse Write/Edit descriptions updated to include lint hook
+
 ## [1.6.0] - 2026-02-19
 
 ### Added
