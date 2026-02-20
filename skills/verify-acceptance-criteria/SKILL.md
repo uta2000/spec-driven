@@ -1,6 +1,10 @@
 ---
 name: verify-acceptance-criteria
-description: Run before claiming work is complete to mechanically verify all acceptance criteria from the implementation plan against the codebase. Delegates to task-verifier agent. Use after implementing tasks, before committing or creating PRs.
+description: >-
+  Use when asked to "verify acceptance criteria", "check criteria", or
+  "verify the implementation against the plan" during active feature
+  development. Do NOT trigger for issue management (close issue, comment),
+  worktree cleanup, or post-merge/post-PR operations.
 tools: Read, Glob, Grep, Task
 ---
 
@@ -17,6 +21,18 @@ Mechanically checks all acceptance criteria from an implementation plan against 
 - Before committing or creating a PR
 
 ## Process
+
+### Step 0: Check for Existing PR
+
+Before doing any work, check if a PR already exists for the current branch:
+
+```bash
+gh pr view --json url,state 2>/dev/null
+```
+
+**If a PR exists:** Announce "A PR already exists for this branch. Verification runs before PR creation in the standard workflow. Skipping." Exit gracefully — do not launch the task-verifier agent.
+
+**If no PR exists:** Continue with Step 1.
 
 ### Step 1: Find the Plan File
 
