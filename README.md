@@ -1,16 +1,8 @@
 # spec-driven
 
-A Claude Code plugin that enforces discipline across the feature development lifecycle — from design through implementation to verification. Context-aware: adapts to your platform (web, iOS, Android) and tech stack, and queries up-to-date documentation via [Context7](https://context7.com/) to ensure code follows current best practices.
+A Claude Code plugin that enforces a full feature development lifecycle — from idea to merged PR — so you don't discover schema mismatches, deprecated APIs, or broken assumptions halfway through coding. You say "start feature: add user notifications" and it auto-detects your tech stack, queries live documentation for current patterns, walks you through brainstorming and design, then verifies that design against your actual codebase (columns, types, routes, constraints) before a single line of implementation is written. After implementation (done via TDD in an isolated git worktree), it runs a multi-agent code review pipeline with up to 7 specialized reviewers, auto-fixes findings, generates a CHANGELOG entry, and mechanically verifies every acceptance criterion before opening a PR.
 
-## The Problem
-
-Features get brainstormed, then jump straight to code. Halfway through, you discover schema constraints that don't match, types that need changing, pipeline assumptions that break. A 2-hour feature becomes a 6-hour debugging session.
-
-## The Solution
-
-Six skills and an orchestrator that cover the full feature development lifecycle. Catch conflicts when they're cheap to fix — a line edit in a design doc instead of a code rewrite.
-
-spec-driven handles the **design, verification, and code review** phases. For **implementation and delivery**, it delegates to the [superpowers](https://github.com/obra/superpowers) plugin — brainstorming, TDD, worktrees, and PRs. For **documentation lookups**, it uses [Context7](https://context7.com/) to query current patterns from official docs before writing code. Code review uses a **multi-agent pipeline** that dispatches up to 7 specialized review agents, auto-fixes findings, and re-verifies until clean.
+The upfront design adds ~20-30 minutes but typically saves 2-4 hours of mid-implementation debugging per feature. It works with any tech stack — Next.js, Supabase, Django, Rails, Flutter, whatever — and gets smarter over time by writing discovered gotchas (like "PostgREST silently caps queries at 1000 rows") back into your project config so every future feature is checked against past lessons.
 
 ## Requirements
 
