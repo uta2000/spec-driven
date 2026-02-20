@@ -81,13 +81,14 @@ Execute each category from the verification checklist. For each item, record: PA
 11. **Dependency & API Contract Verification** — Library versions support proposed usage, external APIs behave as assumed
 12. **Build Compatibility** — TypeScript strict mode, linting rules, framework config
 13. **Route & Layout Chain** — New pages inherit auth, layout, providers correctly
+14. **Structural Anti-Patterns** — God objects, tight coupling, circular dependencies, dependency direction
 
 **Then run additional checks from project context (if loaded in Step 2):**
 
-14. **Stack-Specific Checks** — Run every check from the loaded stack reference files (e.g., Supabase PostgREST limits, Next.js server/client boundaries)
-15. **Platform-Specific Checks** — Run checks from the platform reference file (e.g., mobile backward compatibility, feature flag requirements)
-16. **Project Gotchas** — Check every entry in `.spec-driven.yml` `gotchas` against the design. Each gotcha is a mandatory verification item.
-17. **Documentation Compliance (Context7)** — If `.spec-driven.yml` has a `context7` field and the Context7 MCP plugin is available, verify the design uses current patterns from official documentation. Query relevant Context7 libraries for the specific patterns the design proposes (auth flows, data fetching, client setup, etc.) and check for:
+15. **Stack-Specific Checks** — Run every check from the loaded stack reference files (e.g., Supabase PostgREST limits, Next.js server/client boundaries)
+16. **Platform-Specific Checks** — Run checks from the platform reference file (e.g., mobile backward compatibility, feature flag requirements)
+17. **Project Gotchas** — Check every entry in `.spec-driven.yml` `gotchas` against the design. Each gotcha is a mandatory verification item.
+18. **Documentation Compliance (Context7)** — If `.spec-driven.yml` has a `context7` field and the Context7 MCP plugin is available, verify the design uses current patterns from official documentation. Query relevant Context7 libraries for the specific patterns the design proposes (auth flows, data fetching, client setup, etc.) and check for:
     - [ ] **Current API patterns:** Design uses the latest recommended patterns, not deprecated approaches
     - [ ] **Correct client setup:** Supabase/framework clients are initialized following current docs (e.g., `@supabase/ssr` with `getAll`/`setAll`, not legacy `auth-helpers`)
     - [ ] **Proper error handling:** Error patterns match current framework conventions (e.g., Server Actions return `{ errors }`, not throw)
@@ -173,10 +174,10 @@ Adjust depth based on the design's scope:
 
 | Design Scope | Depth |
 |-------------|-------|
-| New page with new data model | Full checklist (all 13 base categories + stack/platform/gotchas + doc compliance) |
-| New API route, existing data model | Categories 1-3, 5, 7-8, 10-12, 17 + stack/platform/gotchas |
-| UI-only change, no schema changes | Categories 4-6, 9-10, 12-13 + platform/gotchas |
-| Configuration or env change | Categories 7, 10-12 + stack/gotchas |
+| New page with new data model | Full checklist (all 14 base categories + stack/platform/gotchas + doc compliance) |
+| New API route, existing data model | Categories 1-3, 5, 7-8, 10-12, 14, 18 + stack/platform/gotchas |
+| UI-only change, no schema changes | Categories 4-6, 9-10, 12-14 + platform/gotchas |
+| Configuration or env change | Categories 7, 10-12, 14 + stack/gotchas |
 
 ## Quality Rules
 
@@ -190,7 +191,7 @@ Adjust depth based on the design's scope:
 ### Reference Files
 
 For the full detailed verification checklist with specific checks per category:
-- **`references/checklist.md`** — Base verification checklist with 13 categories, specific checks, and examples of common findings
+- **`references/checklist.md`** — Base verification checklist with 14 categories, specific checks, and examples of common findings
 
 For project context and stack/platform-specific checks:
 - **`../../references/project-context-schema.md`** — Schema for `.spec-driven.yml`
