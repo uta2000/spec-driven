@@ -19,9 +19,9 @@ spec-driven handles the **design, verification, and code review** phases. For **
 - [Context7](https://marketplace.claude.ai/plugin/context7) MCP plugin (required — provides live documentation lookups for any tech stack during design and implementation)
 
 **Recommended** (for full code review coverage):
-- [pr-review-toolkit](https://github.com/anthropics/claude-code-pr-review-toolkit) plugin (adds: code-simplifier, silent-failure-hunter, test-analyzer, type-design-analyzer)
-- [feature-dev](https://github.com/anthropics/claude-code-feature-dev) plugin (adds: feature-dev:code-reviewer)
-- [backend-api-security](https://github.com/anthropics/claude-code-backend-api-security) plugin (adds: backend-security-coder)
+- [pr-review-toolkit](https://marketplace.claude.ai/plugin/pr-review-toolkit) plugin (adds: code-simplifier, silent-failure-hunter, test-analyzer, type-design-analyzer)
+- [feature-dev](https://marketplace.claude.ai/plugin/feature-dev) plugin (adds: feature-dev:code-reviewer)
+- [backend-api-security](https://marketplace.claude.ai/plugin/backend-api-security) plugin (adds: backend-security-coder)
 
 ## Installation
 
