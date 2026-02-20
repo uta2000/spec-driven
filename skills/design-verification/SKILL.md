@@ -139,6 +139,8 @@ If the user approves, update the design document with corrections:
 
 Confirm each change with the user before applying.
 
+**YOLO behavior:** If `yolo: true` is in the skill's `ARGUMENTS`, skip per-change confirmation. Auto-apply all recommended corrections and announce: `YOLO: design-verification — Apply corrections → All corrections applied`
+
 ### Step 7: Write Back Gotchas
 
 Review all FAIL and WARNING findings from the verification. Identify any that represent **reusable project-specific pitfalls** — issues that could bite future features, not just this one.

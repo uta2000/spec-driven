@@ -106,6 +106,8 @@ Check for a `.spec-driven.yml` file in the project root.
    ```
 3. If user approves additions, update the file with `Edit`
 
+**YOLO behavior:** If YOLO mode is active, skip this question. Auto-accept all detected dependency additions and announce: `YOLO: start-feature — Stack cross-check → Auto-added: [list of new dependencies]`
+
 **If not found — auto-detect and create:**
 1. Detect platform from project structure (ios/, android/, Podfile, build.gradle, etc.)
 2. Detect stack from dependency files (package.json, requirements.txt, Gemfile, go.mod, Cargo.toml, pubspec.yaml, composer.json, pom.xml, build.gradle, *.csproj, mix.exs) and config files (vercel.json, supabase/, firebase.json, etc.)
@@ -122,7 +124,7 @@ Check for a `.spec-driven.yml` file in the project root.
    ```
 4. Use `AskUserQuestion` with options: "Looks correct", "Let me adjust"
 
-**YOLO behavior:** If YOLO mode is active, skip this question. Accept the detected context as-is and announce: `YOLO: Platform/stack detection → Accepted: [platform], [stack list]`
+**YOLO behavior:** If YOLO mode is active, skip this question. Accept the detected context as-is and announce: `YOLO: start-feature — Platform/stack detection → Accepted: [platform], [stack list]`
 
 5. Write `.spec-driven.yml` with confirmed values (gotchas starts empty — skills will populate it as they discover issues)
 
@@ -163,7 +165,7 @@ Does this look right, or should I adjust the scope?
 
 Use `AskUserQuestion` to confirm. Options: the four scope levels.
 
-**YOLO behavior:** If YOLO mode is active, skip this question. Use the LLM's classification based on the scope criteria table above and announce: `YOLO: Scope classification → [selected scope]`
+**YOLO behavior:** If YOLO mode is active, skip this question. Use the LLM's classification based on the scope criteria table above and announce: `YOLO: start-feature — Scope classification → [selected scope]`
 
 ### Step 2: Build the Step List
 
@@ -594,7 +596,7 @@ If a version is detected, present it alongside `[Unreleased]` via `AskUserQuesti
 
 If no version detected, use `[Unreleased]` without asking.
 
-**YOLO behavior:** If YOLO mode is active, skip this question. Auto-select `[Unreleased]` and announce: `YOLO: CHANGELOG version heading → [Unreleased]`
+**YOLO behavior:** If YOLO mode is active, skip this question. Auto-select `[Unreleased]` and announce: `YOLO: start-feature — CHANGELOG version heading → [Unreleased]`
 
 #### Phase 4: Generate entry
 
@@ -624,7 +626,7 @@ Present the generated entry to the user via `AskUserQuestion`:
 - **Option 2:** "Let me edit" — user provides corrections in freeform text, entry is revised
 - **Option 3:** "Skip CHANGELOG" — announce risk: "No CHANGELOG entry will be included in this PR. You may want to add one manually." Proceed to next lifecycle step.
 
-**YOLO behavior:** If YOLO mode is active, skip this question. Auto-select "Looks good — write it" and announce: `YOLO: CHANGELOG entry → Accepted`
+**YOLO behavior:** If YOLO mode is active, skip this question. Auto-select "Looks good — write it" and announce: `YOLO: start-feature — CHANGELOG entry → Accepted`
 
 #### Phase 6: Write to CHANGELOG.md
 
