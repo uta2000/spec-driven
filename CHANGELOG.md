@@ -22,9 +22,11 @@ All notable changes to the feature-flow plugin.
 ### Changed
 - **Optimized verify-plan-criteria latency** — plan path confirmation is now conditional (skipped when only 1 candidate exists), all criteria approval is batched into a single prompt instead of per-task, and an explicit fast-path skips Steps 4-5 when all tasks already have criteria. Reduces worst-case user round-trips from N+1 to 1, and common-case (all criteria exist) to 0.
 - **Optimized subagent model selection** — adds model guidance to Subagent-Driven Development YOLO Override: implementation subagents default to Sonnet, escalating to Opus only for tasks with architectural complexity keywords ("architect", "migration", "schema change", "new data model"). Spec review and consumer verification agents use Sonnet. Explore agents during implementation use Haiku. Downgrades `feature-dev:code-reviewer` and `superpowers:code-reviewer` from Opus to Sonnet in the code review pipeline table (6/7 agents now Sonnet, 1/7 Opus). Follow-up to intelligent model routing (#21).
+- **Parallelized quality gate checks** — converts sequential `execSync` calls in `hooks/scripts/quality-gate.js` to async `exec` with `Promise.allSettled`, running typecheck, lint, and type-sync concurrently. Tests run sequentially after, only if typecheck passes. Resolves #42.
 
 ### Fixed
 - **File size pre-check for subagents** — adds `wc -c` file size check instruction to Study Existing Patterns agent context (200KB threshold) and large file handling instruction to Code Review Pipeline (use `git diff` for large files instead of reading full content). Adds Tool Usage Patterns section to coding-standards.md with general guidance on file size checks, large file alternatives, and generated file handling. Closes #37.
+- **Quality gate error handling** — fixed empty catch blocks in `checkPrismaTypes`, `findTypeFiles`, and `checkDuplicateTypes` to log warnings instead of silently swallowing errors. Fixed `checkTests` command-not-found detection to use `e.code === 127` (correct for promisified `exec`).
 - Batch criteria edit option now explicitly supports per-task selective accept/reject
 - Combined prompt variants correctly exclude major features from YOLO-recommended label (major with detailed context maps to Neutral)
 - Neutral recommendation variant includes both detailed issue and detailed inline context triggers
