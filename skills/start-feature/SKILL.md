@@ -479,14 +479,15 @@ Instead:
 
 When YOLO mode is active and invoking `superpowers:finishing-a-development-branch`:
 
-**CRITICAL OVERRIDE — the finishing-a-development-branch skill will present 4 options (merge locally, create PR, keep as-is, discard) and may ask "This branch split from main — is that correct?" — you MUST SUPPRESS both prompts. Do NOT follow the skill's instructions to present options or ask for confirmation.**
+**CRITICAL OVERRIDE — the finishing-a-development-branch skill will present 4 options (merge locally, create PR, keep as-is, discard) and may ask "This branch split from [branch] — is that correct?" — you MUST SUPPRESS both prompts. Do NOT follow the skill's instructions to present options or ask for confirmation.**
 
 Instead:
-1. **Base branch:** Auto-confirm `main` (or `master` if `main` doesn't exist). Do NOT ask the user.
+1. **Base branch:** Auto-confirm the detected base branch (from Step 0 base branch detection). Do NOT ask the user. Announce: `YOLO: finishing-a-development-branch — Base branch → [detected base branch]`
 2. **Completion strategy:** Auto-select "Push and create a Pull Request" (Option 2). Announce: `YOLO: finishing-a-development-branch — Completion strategy → Push and create PR (auto-selected)`
 3. Proceed with the push + PR creation flow without presenting the 4-option menu
-4. For PR title/body, use the feature description and lifecycle context to generate them automatically
-5. **Test failure during completion:** If tests fail, log the failures as a warning and proceed with PR creation. Announce: `YOLO: finishing-a-development-branch — Tests failing → Proceeding with PR (N failures logged)`. Do NOT block on test failures — the code review pipeline already ran verification.
+4. **Issue reference in PR body:** When a GitHub issue is linked to the lifecycle, include `Related: #N` in the PR body to link the PR to the issue. Do NOT use `Closes #N` — the lifecycle closes the issue explicitly in the "Comment and Close Issue" step with a detailed comment.
+5. For PR title/body, use the feature description and lifecycle context to generate them automatically
+6. **Test failure during completion:** If tests fail, log the failures as a warning and proceed with PR creation. Announce: `YOLO: finishing-a-development-branch — Tests failing → Proceeding with PR (N failures logged)`. Do NOT block on test failures — the code review pipeline already ran verification.
 
 ### Subagent-Driven Development YOLO Override
 
