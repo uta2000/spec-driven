@@ -14,15 +14,16 @@ async function main() {
   // Skip if lifecycle already verified at this commit with clean working tree
   try {
     const markerPath = path.join(
-      execSync('git rev-parse --git-dir', { encoding: 'utf8' }).trim(),
+      execSync('git rev-parse --git-dir', { encoding: 'utf8', timeout: 5000 }).trim(),
       'feature-flow-verified'
     );
     if (existsSync(markerPath)) {
       const savedHash = readFileSync(markerPath, 'utf8').trim();
-      const currentHash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
-      const dirty = execSync('git diff HEAD --name-only', { encoding: 'utf8' }).trim();
+      const currentHash = execSync('git rev-parse HEAD', { encoding: 'utf8', timeout: 5000 }).trim();
+      const dirty = execSync('git status --porcelain', { encoding: 'utf8', timeout: 5000 }).trim();
       if (savedHash === currentHash && !dirty) {
-        return; // All checks passed at this commit, working tree clean
+        console.error('[feature-flow] Quality gates already verified at this commit — skipping.');
+        return;
       }
     }
   } catch {
@@ -76,13 +77,14 @@ main().catch(e => {
 function writeVerificationMarker() {
   try {
     const markerPath = path.join(
-      execSync('git rev-parse --git-dir', { encoding: 'utf8' }).trim(),
+      execSync('git rev-parse --git-dir', { encoding: 'utf8', timeout: 5000 }).trim(),
       'feature-flow-verified'
     );
-    const hash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    const hash = execSync('git rev-parse HEAD', { encoding: 'utf8', timeout: 5000 }).trim();
     writeFileSync(markerPath, hash + '\n');
-  } catch {
+  } catch (e) {
     // Non-critical — marker write failure doesn't affect quality gate results
+    console.error(`[feature-flow] Could not write verification marker: ${e.message?.slice(0, 100)}`);
   }
 }
 
