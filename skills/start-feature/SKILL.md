@@ -552,6 +552,7 @@ This step runs after copy env files and before implementation. It forces reading
    - Area name and file paths/directories to examine
    - Instructions: read 2-3 example files, extract file structure, error handling, naming conventions, and state management patterns
    - Instructions: flag anti-patterns — files exceeding 300 lines (god files), mixed concerns, circular dependency imports, duplicated logic
+   - Instructions: before reading any file, check its size with `wc -c <file>`. If >200KB, use Grep to find relevant sections instead of reading the whole file, or use Read with offset/limit parameters targeting the specific functions/components being studied.
 
    **Expected return format per agent:**
 
@@ -667,6 +668,8 @@ This step runs after self-review and before final verification. It dispatches mu
 **Process:**
 
 **Model override:** If the user has requested a specific model for the entire lifecycle (e.g., "use opus for everything" or "use sonnet for everything"), apply that model to all agent dispatches in this code review pipeline, overriding the per-agent defaults in the table.
+
+**Large file handling:** If the branch diff includes files >200KB, instruct review agents to use `git diff main...HEAD -- <file>` for those files instead of reading the full file. The diff contains only the changed sections, which is what reviewers need.
 
 #### Phase 1: Dispatch review agents
 
