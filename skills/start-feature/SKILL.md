@@ -371,6 +371,31 @@ When invoking `superpowers:brainstorming` from this lifecycle, pass these format
 
 This is the most complex YOLO interaction — the LLM makes design-level decisions. The user reviews these via the design document output rather than each micro-decision.
 
+### Graduated YOLO Behavior
+
+When YOLO mode is active (whether from trigger phrase or user selection), the number of mandatory checkpoints scales with scope complexity:
+
+| Scope | Checkpoints | Where |
+|-------|------------|-------|
+| Quick fix | 0 | Full autonomy — zero interactive prompts |
+| Small enhancement | 0 | Full autonomy — zero interactive prompts |
+| Feature | 1 | Design document approval (before implementation) |
+| Major feature | 2 | Brainstorming output summary + Design document approval |
+
+**Checkpoint UX:** Mandatory checkpoints are presented via `AskUserQuestion`:
+
+```
+YOLO checkpoint: [artifact summary]. Continue or adjust?
+```
+
+Options:
+- "Continue" — resume YOLO mode for remaining steps
+- "Let me adjust" — user provides corrections, then YOLO resumes (does NOT switch to interactive for remaining steps)
+
+**Scope upgrade rule:** If scope is upgraded during the lifecycle (e.g., Small Enhancement → Feature via Scope Adjustment Rules), adopt the checkpoint rules of the new scope for all remaining steps.
+
+**What checkpoints do NOT affect:** All other YOLO decisions (platform detection, CHANGELOG heading, gotcha additions, issue creation, plan criteria approval) remain fully auto-selected regardless of scope.
+
 ### Commit Planning Artifacts Step (inline — no separate skill)
 
 This step runs after verify-plan-criteria and before worktree setup. It commits design documents and project config to the base branch so the worktree inherits them via git history, preventing untracked file clutter.
