@@ -954,7 +954,7 @@ If the lifecycle ran in YOLO mode, append the decision log after the standard co
 | N | using-git-worktrees | Worktree directory | .worktrees/ (auto-selected) |
 | N | finishing-a-dev-branch | Completion strategy | Push and create PR (auto-selected) |
 
-**Total decisions auto-selected:** N (includes spec-driven decisions + superpowers overrides)
+**Total decisions auto-selected:** N (includes feature-flow decisions + superpowers overrides)
 **Quality gates preserved:** hooks, tests, verification, code review
 ```
 
@@ -976,7 +976,7 @@ If the lifecycle ran in YOLO mode, append the decision log after the standard co
 | N | using-git-worktrees | Worktree directory | .worktrees/ (auto-selected) |
 | N | finishing-a-dev-branch | Completion strategy | Push and create PR (auto-selected) |
 
-**Total decisions auto-selected:** N (includes spec-driven decisions + superpowers overrides)
+**Total decisions auto-selected:** N (includes feature-flow decisions + superpowers overrides)
 **Checkpoints presented:** M of M approved [with/without changes]
 ```
 

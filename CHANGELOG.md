@@ -17,6 +17,8 @@ All notable changes to the feature-flow plugin.
 - **Parallel agent dispatch for skill operations** — converts four sequential skill operations to parallel agent dispatch using the Task tool. Design verification dispatches 6 thematic batch agents (Schema & Types, Pipeline & Components, Quality & Safety, Patterns & Build, Structure & Layout, Stack/Platform/Docs) with verification depth filtering. Spike experiments dispatch one worktree-isolated `general-purpose` agent per assumption (cap: 5 concurrent). Design document context gathering dispatches 3-4 Explore agents for format patterns, stack dependencies, relevant code, and optional Context7 documentation. Start-feature pattern study dispatches one Explore agent per codebase area to extract patterns and flag anti-patterns. All skills use consistent failure handling (retry once, then skip with warning) and consolidation patterns.
 - Batch grouping annotations added to verification checklist (`<!-- batch: N -->` markers) for parallel partitioning
 
+- **YOLO superpowers overrides** — adds CRITICAL OVERRIDE blocks for 5 superpowers skills (brainstorming, writing-plans, using-git-worktrees, finishing-a-development-branch, subagent-driven-development) that explicitly name and suppress conflicting interactive prompts. Strengthens the brainstorming override from weak 4-line block to 6-step explicit pre-emption. Adds test failure handling to finishing override. Updates YOLO Decision Log templates with superpowers auto-decision rows.
+
 ### Fixed
 - Combined prompt variants correctly exclude major features from YOLO-recommended label (major with detailed context maps to Neutral)
 - Neutral recommendation variant includes both detailed issue and detailed inline context triggers
