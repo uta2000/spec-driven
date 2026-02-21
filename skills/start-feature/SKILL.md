@@ -484,7 +484,7 @@ This step runs after self-review and before final verification. It dispatches mu
 
 **Process:**
 
-**Model override:** If the user has requested a specific model for the entire lifecycle (e.g., "use opus for everything" or "use sonnet for everything"), apply that model to all agent dispatches below, overriding the per-agent defaults in the table.
+**Model override:** If the user has requested a specific model for the entire lifecycle (e.g., "use opus for everything" or "use sonnet for everything"), apply that model to all agent dispatches in this code review pipeline, overriding the per-agent defaults in the table.
 
 #### Phase 1: Dispatch review agents
 
@@ -555,6 +555,7 @@ Output a summary:
 ## Code Review Pipeline Results
 
 **Agents dispatched:** N/7
+**Model override:** [None | user-requested: \<model\>]
 **Iterations:** M/3
 
 ### Fixed (auto)
