@@ -848,20 +848,40 @@ Summary:
 
 **YOLO Decision Log (if YOLO mode was active):**
 
-If the lifecycle ran in YOLO mode, append the full decision log after the standard completion summary:
+If the lifecycle ran in YOLO mode, append the decision log after the standard completion summary. The format varies by whether checkpoints were used:
+
+**Full YOLO (quick fix / small enhancement — no checkpoints):**
 
 ```
 ## YOLO Decision Log
 
+**Mode:** YOLO (system recommended — [scope] scope, low complexity)
+
 | # | Skill | Decision | Auto-Selected |
 |---|-------|----------|---------------|
-| 1 | start-feature | Platform/stack detection | Accepted: [platform], [stack] |
-| 2 | start-feature | Scope classification | [scope] |
-| 3 | brainstorming | [question] | [answer] |
+| 1 | start-feature | Scope + mode | [scope], YOLO recommended |
 | ... | ... | ... | ... |
 
 **Total decisions auto-selected:** N
 **Quality gates preserved:** hooks, tests, verification, code review
+```
+
+**Graduated YOLO (feature / major feature — with checkpoints):**
+
+```
+## YOLO Decision Log
+
+**Mode:** YOLO with checkpoints (system recommended — [scope] scope, [reasoning])
+**Checkpoints presented:** M
+
+| # | Skill | Decision | Auto-Selected |
+|---|-------|----------|---------------|
+| ... | ... | ... | ... |
+| N | design-document | Document approval | ✋ User reviewed (approved / adjusted) |
+| ... | ... | ... | ... |
+
+**Total decisions auto-selected:** N
+**Checkpoints presented:** M of M approved [with/without changes]
 ```
 
 **Cancellation:** There is no formal YOLO cancellation mechanism. Inline announcements (`YOLO: [skill] — [decision] → [option]`) serve as an "emergency brake" — the user sees each decision as it's made and can interrupt the lifecycle at any point by sending a message. The lifecycle will pause at the current step, and the user can redirect from there.
