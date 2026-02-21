@@ -84,10 +84,17 @@ Before any other processing, check if the user requested YOLO mode via a trigger
    - `--yolo` (flag style — match as a standalone token)
    - `yolo mode` (natural language phrase)
    - `run unattended` (natural language phrase)
+   - `--yolo-compact` (flag style — match as a standalone token)
+   - `yolo compact mode` (natural language phrase)
 2. If a trigger is found:
-   - Set YOLO mode active for the remainder of the lifecycle
-   - Announce: "YOLO mode active. Auto-selecting recommended options. Decision log will be printed at completion."
-   - Strip the trigger phrase from the arguments before further processing (so `start feature: add CSV export --yolo` becomes `start feature: add CSV export` for scope classification)
+   - If the trigger is `--yolo-compact` or `yolo compact mode`:
+     - Set YOLO mode active AND set `compact_prompts` flag for the remainder of the lifecycle
+     - Announce: "YOLO mode active (with compaction prompts). Auto-selecting recommended options but pausing at phase transitions. Decision log will be printed at completion."
+     - Strip the trigger phrase from the arguments before further processing
+   - Otherwise (standard YOLO triggers):
+     - Set YOLO mode active for the remainder of the lifecycle
+     - Announce: "YOLO mode active. Auto-selecting recommended options. Decision log will be printed at completion."
+     - Strip the trigger phrase from the arguments before further processing (so `start feature: add CSV export --yolo` becomes `start feature: add CSV export` for scope classification)
 3. If no trigger is found:
    - Do nothing here — the YOLO/Interactive mode prompt is presented in Step 1 after scope classification, where the system can make a smart recommendation based on scope and issue context.
 
