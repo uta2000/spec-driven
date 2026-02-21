@@ -128,6 +128,20 @@ Check for a `.feature-flow.yml` file in the project root.
 See `../../references/auto-discovery.md` for the full detection rules.
 See `../../references/project-context-schema.md` for the schema.
 
+**Base Branch Detection:**
+
+After loading project context, detect the base branch that will be used as the PR target and for all `...HEAD` diff commands throughout the lifecycle. Detect once and announce — all subsequent steps reference "the detected base branch."
+
+Detection cascade:
+1. `.feature-flow.yml` → `default_branch` field (if present and non-empty)
+2. `git config --get init.defaultBranch` (if set and branch exists locally or on remote)
+3. Check if `staging` branch exists: `git rev-parse --verify staging 2>/dev/null`
+4. Fall back to `main` (or `master` if `main` doesn't exist)
+
+Announce: `"Detected base branch: [branch]. All PR targets and branch diffs will use this."`
+
+**YOLO behavior:** No prompt — always auto-detected. Announce: `YOLO: start-feature — Base branch detection → [branch]`
+
 ### Step 1: Determine Scope
 
 Ask the user what they want to build. Then classify the work.
@@ -221,6 +235,7 @@ Based on scope AND platform, determine which steps apply. Create a todo list to 
 - [ ] 4. Self-review
 - [ ] 5. Verify acceptance criteria
 - [ ] 6. Commit and PR
+- [ ] 7. Comment and close issue
 ```
 
 **Small enhancement:**
@@ -241,6 +256,7 @@ Based on scope AND platform, determine which steps apply. Create a todo list to 
 - [ ] 14. Generate CHANGELOG entry
 - [ ] 15. Final verification
 - [ ] 16. Commit and PR
+- [ ] 17. Comment and close issue
 ```
 
 **Feature:**
@@ -262,6 +278,7 @@ Based on scope AND platform, determine which steps apply. Create a todo list to 
 - [ ] 15. Generate CHANGELOG entry
 - [ ] 16. Final verification
 - [ ] 17. Commit and PR
+- [ ] 18. Comment and close issue
 ```
 
 **Major feature:**
@@ -284,6 +301,7 @@ Based on scope AND platform, determine which steps apply. Create a todo list to 
 - [ ] 16. Generate CHANGELOG entry
 - [ ] 17. Final verification
 - [ ] 18. Commit and PR
+- [ ] 19. Comment and close issue
 ```
 
 **Mobile platform adjustments (ios, android, cross-platform):**
@@ -294,8 +312,9 @@ When the platform is mobile, modify the step list:
 - **After implementation:** Insert **device matrix testing** step (test on min OS version, small/large screens, slow network)
 - **After final verification:** Insert **beta testing** step (TestFlight / Play Console internal testing)
 - **After commit and PR:** Insert **app store review** step (human-driven gate — submission, review, potential rejection)
+- **After app store review (or after commit and PR if not mobile):** Insert **comment and close issue** step (post implementation summary comment, close issue). Only runs when an issue is linked.
 
-Announce the platform-specific additions: "Mobile platform detected. Adding: device matrix testing, beta testing, and app store review steps."
+Announce the platform-specific additions: "Mobile platform detected. Adding: device matrix testing, beta testing, app store review, and comment and close issue steps."
 
 Use `TaskCreate` to create a todo item for each step.
 
@@ -346,6 +365,7 @@ For inline steps (CHANGELOG generation, self-review, code review, study existing
 | Device matrix testing | No skill — manual step | Tested on min OS, small/large screens, slow network |
 | Beta testing | No skill — manual step | TestFlight / Play Console build tested by internal tester |
 | App store review | No skill — manual step | Submission accepted |
+| Comment and close issue | No skill — inline step (see below) | Issue commented with implementation summary + closed |
 
 ### Brainstorming Interview Format Override
 
@@ -459,14 +479,15 @@ Instead:
 
 When YOLO mode is active and invoking `superpowers:finishing-a-development-branch`:
 
-**CRITICAL OVERRIDE — the finishing-a-development-branch skill will present 4 options (merge locally, create PR, keep as-is, discard) and may ask "This branch split from main — is that correct?" — you MUST SUPPRESS both prompts. Do NOT follow the skill's instructions to present options or ask for confirmation.**
+**CRITICAL OVERRIDE — the finishing-a-development-branch skill will present 4 options (merge locally, create PR, keep as-is, discard) and may ask "This branch split from [branch] — is that correct?" — you MUST SUPPRESS both prompts. Do NOT follow the skill's instructions to present options or ask for confirmation.**
 
 Instead:
-1. **Base branch:** Auto-confirm `main` (or `master` if `main` doesn't exist). Do NOT ask the user.
+1. **Base branch:** Auto-confirm the detected base branch (from Step 0 base branch detection). Do NOT ask the user. Announce: `YOLO: finishing-a-development-branch — Base branch → [detected base branch]`
 2. **Completion strategy:** Auto-select "Push and create a Pull Request" (Option 2). Announce: `YOLO: finishing-a-development-branch — Completion strategy → Push and create PR (auto-selected)`
 3. Proceed with the push + PR creation flow without presenting the 4-option menu
-4. For PR title/body, use the feature description and lifecycle context to generate them automatically
-5. **Test failure during completion:** If tests fail, log the failures as a warning and proceed with PR creation. Announce: `YOLO: finishing-a-development-branch — Tests failing → Proceeding with PR (N failures logged)`. Do NOT block on test failures — the code review pipeline already ran verification.
+4. **Issue reference in PR body:** When a GitHub issue is linked to the lifecycle, include `Related: #N` in the PR body to link the PR to the issue. Do NOT use `Closes #N` — the lifecycle closes the issue explicitly in the "Comment and Close Issue" step with a detailed comment.
+5. For PR title/body, use the feature description and lifecycle context to generate them automatically
+6. **Test failure during completion:** If tests fail, log the failures as a warning and proceed with PR creation. Announce: `YOLO: finishing-a-development-branch — Tests failing → Proceeding with PR (N failures logged)`. Do NOT block on test failures — the code review pipeline already ran verification.
 
 ### Subagent-Driven Development YOLO Override
 
@@ -669,11 +690,11 @@ This step runs after self-review and before final verification. It dispatches mu
 
 **Model override:** If the user has requested a specific model for the entire lifecycle (e.g., "use opus for everything" or "use sonnet for everything"), apply that model to all agent dispatches in this code review pipeline, overriding the per-agent defaults in the table.
 
-**Large file handling:** If the branch diff includes files >200KB, instruct review agents to use `git diff main...HEAD -- <file>` for those files instead of reading the full file. The diff contains only the changed sections, which is what reviewers need.
+**Large file handling:** If the branch diff includes files >200KB, instruct review agents to use `git diff [base-branch]...HEAD -- <file>` (where `[base-branch]` is the branch detected in Step 0) for those files instead of reading the full file. The diff contains only the changed sections, which is what reviewers need.
 
 #### Phase 1: Dispatch review agents
 
-Dispatch all available review agents in parallel. For each agent, use the Task tool with the agent's `subagent_type` and `model` parameter (see table below). Each agent's prompt should include the full branch diff (`git diff main...HEAD`) and a description of what to review. Launch all agents in a single message to run them concurrently.
+Dispatch all available review agents in parallel. For each agent, use the Task tool with the agent's `subagent_type` and `model` parameter (see table below). Each agent's prompt should include the full branch diff (`git diff [base-branch]...HEAD`) and a description of what to review. Launch all agents in a single message to run them concurrently.
 
 | Agent | Plugin | Role | Fix Mode | Model |
 |-------|--------|------|----------|-------|
@@ -772,7 +793,7 @@ This step runs after code review and before final verification. It auto-generate
 
 #### Phase 1: Collect commits
 
-1. Get all commit messages on the feature branch: `git log --format="%s" main...HEAD`
+1. Get all commit messages on the feature branch: `git log --format="%s" [base-branch]...HEAD`
 2. Filter out merge commits matching `^Merge (branch|pull request)`
 3. Filter out fixup/squash commits matching `^(fixup|squash)!`
 4. If no commits remain after filtering, skip the step: "No commits found on feature branch — skipping CHANGELOG generation."
@@ -889,6 +910,65 @@ After writing, announce: "CHANGELOG.md updated with N entries across M categorie
 **Action:** Written to CHANGELOG.md / Skipped by user
 ```
 
+### Comment and Close Issue Step (inline — no separate skill)
+
+This step runs after "Commit and PR" (or after mobile-specific steps like app store review) and before the completion summary. It only runs when a GitHub issue was linked during Step 1 (issue reference detection). If no issue was linked, skip this step silently.
+
+**Process:**
+
+1. **Check if issue is already closed:**
+   ```bash
+   gh issue view N --json state --jq '.state'
+   ```
+   If the state is `CLOSED`, log: `"Issue #N is already closed — skipping."` and skip.
+
+2. **Generate the comment body** from lifecycle context:
+
+   ```markdown
+   ## Implementation Complete
+
+   **PR:** #[PR number]
+
+   ### What was built
+   - [2-4 bullet points summarizing what was implemented, derived from the design doc and commit history]
+
+   ### Acceptance criteria verified
+   - [x] [Each acceptance criterion from the implementation plan, marked as verified]
+
+   ### Key files changed
+   - `[file path]` — [1-line description of change]
+   - `[file path]` — [1-line description of change]
+   [limit to 10 most significant files]
+   ```
+
+   **Content sources:**
+   - "What was built" → derive from design doc overview + `git log --format="%s" [base-branch]...HEAD`
+   - Acceptance criteria → from the implementation plan tasks, verified during the final verification step
+   - Key files → from `git diff --stat [base-branch]...HEAD`, limited to 10 most-changed files
+
+3. **Post the comment:**
+   ```bash
+   gh issue comment N --body "$(cat <<'EOF'
+   [generated comment]
+   EOF
+   )"
+   ```
+   Use a heredoc to safely pass multiline markdown content to `gh`.
+
+4. **Close the issue:**
+   ```bash
+   gh issue close N
+   ```
+
+5. **Announce:** `"Issue #N commented and closed."`
+
+**Edge cases:**
+- **No issue linked:** Skip this step silently — not all lifecycle runs start from an issue
+- **Issue already closed:** Log warning: `"Issue #N is already closed — skipping."` Do not reopen or double-comment.
+- **`gh` command fails:** Log warning and continue — don't block completion on a comment failure
+
+**YOLO behavior:** No prompt needed — this step is always automated. In YOLO mode, runs silently. In Interactive mode, announce but don't ask for confirmation.
+
 ### Documentation Lookup Step (inline — no separate skill)
 
 This step queries Context7 for current patterns relevant to the feature being built. It runs between brainstorming and the design document to ensure the design uses up-to-date patterns.
@@ -964,9 +1044,17 @@ Lifecycle complete!
 Summary:
 - Platform: [web/ios/android/cross-platform]
 - Design doc: docs/plans/YYYY-MM-DD-feature.md
-- Issue: #[number]
-- PR: #[number]
+- Issue: #[number] (commented and closed) [or "(no issue linked)" if none]
+- PR: #[number] → [base branch]
 - All acceptance criteria verified
+
+Worktree: [Removed / Still active at .worktrees/feature-name]
+[If still active: "Run `git worktree remove .worktrees/feature-name` when done."]
+
+What to do next:
+1. Review PR #[number] on GitHub (or request team review)
+2. After PR merges to [base branch], verify in [base branch] environment
+3. Clean up local branch: `git branch -d feature-name && git fetch --prune`
 
 [List any skipped steps and their risks]
 [List any platform-specific notes (e.g., "App store submission pending")]
