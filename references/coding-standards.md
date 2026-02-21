@@ -170,9 +170,9 @@ These are loaded from Context7 and the stack reference files. When implementing,
 
 ## Tool Usage Patterns
 
-- **Check file size before `Read` on unfamiliar files:** `wc -c < file`. Files >200KB will exceed the 256KB tool limit.
+- **Check file size before `Read` on unfamiliar files:** `wc -c <file>`. Files >200KB will exceed the 256KB tool limit.
 - **Large files (>200KB):** Use Grep to find relevant sections, or Read with offset/limit targeting specific functions.
-- **Code review:** `git diff` is always smaller than the full file — prefer it for reviewing changes.
+- **Code review:** `git diff` contains only the changed sections — prefer it over reading full files for reviewing changes.
 - **Never read generated files whole:** Build artifacts, minified bundles, lock files, and generated types can be megabytes. Always use targeted reads.
 
 ## How This File Is Used
