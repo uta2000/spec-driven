@@ -723,6 +723,8 @@ After all fixes are applied, re-verify:
    - `go.mod` → `go test ./...`
    - `mix.exs` → `mix test`
    - `pyproject.toml` / `pytest.ini` / `setup.cfg` / `tox.ini` → `python -m pytest`
+   - `deno.json` / `deno.jsonc` → `deno test` (verify `deno` is installed first; if not, skip with warning)
+   - `bun.lockb` / `bun.lock` / `bunfig.toml` → `bun test` (verify `bun` is installed first; if not, skip with warning)
    - If no test runner detected, skip and log: "No test runner detected — skipping test verification."
    - **Timeout:** 60 seconds. If the test suite times out, log a warning and skip (do not count as a failure).
    - **Error handling:** If the test command is not found (ENOENT / exit code 127), log a warning and skip. Do not fail the pipeline for a missing tool.

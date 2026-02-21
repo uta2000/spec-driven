@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const { exec } = require('child_process');
+const { exec, execSync } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
 const { existsSync, readFileSync, readdirSync, statSync } = require('fs');
@@ -259,7 +259,29 @@ function detectTestCommand() {
     return 'python -m pytest';
   }
 
+  if (existsSync('deno.json') || existsSync('deno.jsonc')) {
+    return detectRuntimeTestCommand('deno', 'deno test', 'Install deno or remove deno.json.');
+  }
+
+  if (existsSync('bun.lockb') || existsSync('bun.lock') || existsSync('bunfig.toml')) {
+    return detectRuntimeTestCommand('bun', 'bun test', 'Install bun or remove the lockfile.');
+  }
+
   return null;
+}
+
+function detectRuntimeTestCommand(runtime, command, hint) {
+  try {
+    execSync(`${runtime} --version`, { stdio: 'pipe', timeout: 5000 });
+    return command;
+  } catch (e) {
+    const isNotFound = e.code === 'ENOENT' || e.status === 127;
+    const detail = isNotFound
+      ? `${runtime} not found in PATH`
+      : `${runtime} --version failed (${e.code || 'exit ' + e.status}): ${(e.message || '').slice(0, 100)}`;
+    warnings.push(`[feature-flow] ${runtime} config found but ${detail} — skipping test check. ${hint}`);
+    return null;
+  }
 }
 
 // --- Helpers ---
