@@ -715,6 +715,8 @@ For each Critical and Important finding, read the agent's recommendation and app
 
 After all fixes are applied, re-verify:
 
+**Parallelization:** When running quality checks inline, dispatch typecheck, lint, and type-sync as parallel Bash commands in a single message. These are independent checks. Only run tests after typecheck passes (tests depend on valid types).
+
 1. **Run tests:** Detect the test runner from the project (matching the quality gate's `detectTestCommand()` in `hooks/scripts/quality-gate.js`):
    - `package.json` with `scripts.test` (not the npm default placeholder) → `npm test`. If `node_modules` doesn't exist, skip with warning.
    - `Cargo.toml` → `cargo test`

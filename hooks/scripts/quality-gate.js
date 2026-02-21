@@ -1,31 +1,56 @@
 #!/usr/bin/env node
 'use strict';
 
-const { execSync } = require('child_process');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 const { existsSync, readFileSync, readdirSync, statSync } = require('fs');
 const path = require('path');
 
 const failures = [];
 const warnings = [];
 
-try { checkTypeScript(); } catch (e) { warnings.push(`[feature-flow] TypeScript check failed unexpectedly: ${e.message?.slice(0, 100)}`); }
-try { checkLint(); } catch (e) { warnings.push(`[feature-flow] Lint check failed unexpectedly: ${e.message?.slice(0, 100)}`); }
-try { checkTypeSync(); } catch (e) { warnings.push(`[feature-flow] Type-sync check failed unexpectedly: ${e.message?.slice(0, 100)}`); }
-try { checkTests(); } catch (e) { warnings.push(`[feature-flow] Test check failed unexpectedly: ${e.message?.slice(0, 100)}`); }
+async function main() {
+  const checks = [
+    ['TypeScript', checkTypeScript],
+    ['Lint', checkLint],
+    ['Type-sync', checkTypeSync],
+  ];
 
-if (failures.length > 0) {
-  const report = failures.join('\n\n');
-  const warn = warnings.length > 0 ? '\n\n' + warnings.join('\n') : '';
-  console.log(`BLOCK: Code quality checks failed. Fix before ending session:\n\n${report}${warn}`);
-} else if (warnings.length > 0) {
-  console.error(warnings.join('\n'));
+  await Promise.allSettled(
+    checks.map(([name, fn]) =>
+      fn().catch(e => {
+        warnings.push(`[feature-flow] ${name} check failed unexpectedly: ${e.message?.slice(0, 100)}`);
+      })
+    )
+  );
+
+  // Run tests only after typecheck passes — tests depend on valid types
+  const hasTypeErrors = failures.some(f => f.startsWith('[TSC]'));
+  if (!hasTypeErrors) {
+    await checkTests().catch(e => {
+      warnings.push(`[feature-flow] Test check failed unexpectedly: ${e.message?.slice(0, 100)}`);
+    });
+  }
+
+  if (failures.length > 0) {
+    const report = failures.join('\n\n');
+    const warn = warnings.length > 0 ? '\n\n' + warnings.join('\n') : '';
+    console.log(`BLOCK: Code quality checks failed. Fix before ending session:\n\n${report}${warn}`);
+  } else if (warnings.length > 0) {
+    console.error(warnings.join('\n'));
+  }
 }
 
-process.exit(0);
+main().catch(e => {
+  console.error(`[feature-flow] Quality gate crashed: ${e.message?.slice(0, 200)}`);
+}).finally(() => {
+  process.exit(0);
+});
 
 // --- Check 1: TypeScript ---
 
-function checkTypeScript() {
+async function checkTypeScript() {
   const tsconfig = ['tsconfig.json', 'tsconfig.app.json', 'tsconfig.build.json'].find(f =>
     existsSync(f)
   );
@@ -33,7 +58,7 @@ function checkTypeScript() {
   if (!existsSync('node_modules/.bin/tsc')) return;
 
   try {
-    execSync(`npx tsc --noEmit --project "${tsconfig}"`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+    await execAsync(`npx tsc --noEmit --project "${tsconfig}"`, { encoding: 'utf8' });
   } catch (e) {
     const output = execOutput(e);
     const errorLines = output.split('\n').filter(l => l.includes('error TS'));
@@ -50,13 +75,13 @@ function checkTypeScript() {
 
 // --- Check 2: Lint ---
 
-function checkLint() {
+async function checkLint() {
   // Try npm run lint first
   if (existsSync('package.json')) {
     try {
       const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
       if (pkg.scripts?.lint) {
-        runLintCommand('npm run lint', 'Lint errors found');
+        await runLintCommand('npm run lint', 'Lint errors found');
         return;
       }
     } catch (e) {
@@ -66,18 +91,18 @@ function checkLint() {
 
   // Fallback: direct linter detection
   if (existsSync('node_modules/.bin/eslint') && hasEslintConfig()) {
-    runLintCommand('npx eslint .', 'ESLint errors');
+    await runLintCommand('npx eslint .', 'ESLint errors');
     return;
   }
 
   if (existsSync('node_modules/.bin/biome') && hasBiomeConfig()) {
-    runLintCommand('npx biome check .', 'Biome errors');
+    await runLintCommand('npx biome check .', 'Biome errors');
   }
 }
 
-function runLintCommand(command, label) {
+async function runLintCommand(command, label) {
   try {
-    execSync(command, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+    await execAsync(command, { encoding: 'utf8' });
   } catch (e) {
     const lines = execOutput(e).split('\n').slice(0, 20).join('\n  ');
     failures.push(`[LINT] ${label}\n  ${lines}`);
@@ -86,7 +111,7 @@ function runLintCommand(command, label) {
 
 // --- Check 3: Type-sync ---
 
-function checkTypeSync() {
+async function checkTypeSync() {
   if (!existsSync('.feature-flow.yml')) return;
 
   const yml = readFileSync('.feature-flow.yml', 'utf8');
@@ -94,7 +119,7 @@ function checkTypeSync() {
   const typesPath = parseTypesPath(yml);
 
   if (stack.includes('supabase') && existsSync('supabase')) {
-    checkSupabaseTypes(typesPath);
+    await checkSupabaseTypes(typesPath);
   }
 
   if (stack.includes('prisma') && existsSync('prisma/schema.prisma')) {
@@ -104,12 +129,12 @@ function checkTypeSync() {
   checkDuplicateTypes(typesPath);
 }
 
-function checkSupabaseTypes(typesPathOverride) {
+async function checkSupabaseTypes(typesPathOverride) {
   if (!existsSync('node_modules/.bin/supabase')) return;
 
   // Guard: is Supabase running?
   try {
-    execSync('npx supabase status', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+    await execAsync('npx supabase status', { encoding: 'utf8' });
   } catch {
     warnings.push(
       '[feature-flow] Supabase not running locally — skipping type freshness check. Run "supabase start" to enable.'
@@ -124,9 +149,8 @@ function checkSupabaseTypes(typesPathOverride) {
   }
 
   try {
-    const fresh = execSync('npx supabase gen types typescript --local', {
+    const { stdout: fresh } = await execAsync('npx supabase gen types typescript --local', {
       encoding: 'utf8',
-      stdio: ['pipe', 'pipe', 'pipe'],
     });
     const existing = readFileSync(typesFile, 'utf8');
     if (fresh.trim() !== existing.trim()) {
@@ -149,7 +173,9 @@ function checkPrismaTypes() {
     if (clientPath && schemaTime > statSync(clientPath).mtimeMs) {
       failures.push('[TYPE-SYNC] Prisma schema modified since last generation\n  Run: npx prisma generate');
     }
-  } catch {}
+  } catch (e) {
+    warnings.push(`[feature-flow] Prisma type-sync check failed: ${e.message?.slice(0, 100)}`);
+  }
 }
 
 function checkDuplicateTypes(typesPathOverride) {
@@ -158,26 +184,34 @@ function checkDuplicateTypes(typesPathOverride) {
   if (!existsSync('supabase/functions')) return;
 
   const canonicalContent = readFileSync(canonical, 'utf8');
-  for (const tf of findTypeFiles('supabase/functions')) {
+  let typeFiles;
+  try {
+    typeFiles = findTypeFiles('supabase/functions');
+  } catch (e) {
+    warnings.push(`[feature-flow] Could not scan supabase/functions for duplicate types: ${e.message?.slice(0, 80)}`);
+    return;
+  }
+  for (const tf of typeFiles) {
     if (path.resolve(tf) === path.resolve(canonical)) continue;
     try {
       if (readFileSync(tf, 'utf8') !== canonicalContent) {
         failures.push(`[TYPE-SYNC] Type file ${tf} has drifted from canonical source ${canonical}`);
       }
-    } catch {}
+    } catch (e) {
+      warnings.push(`[feature-flow] Could not read type file ${tf} for drift check: ${e.message?.slice(0, 80)}`);
+    }
   }
 }
 
 // --- Check 4: Tests ---
 
-function checkTests() {
+async function checkTests() {
   const cmd = detectTestCommand();
   if (!cmd) return;
 
   try {
-    execSync(cmd, {
+    await execAsync(cmd, {
       encoding: 'utf8',
-      stdio: ['pipe', 'pipe', 'pipe'],
       timeout: 60000,
       env: { ...process.env, CI: '1' },
     });
@@ -186,7 +220,8 @@ function checkTests() {
       warnings.push('[feature-flow] Test suite timed out (60s) — skipping. Run tests manually.');
       return;
     }
-    if (e.code === 'ENOENT' || e.status === 127) {
+    // e.code is the numeric exit code with promisify(exec); 127 = shell "command not found"
+    if (e.code === 127) {
       warnings.push(`[feature-flow] Test command not found: "${cmd}". Ensure the tool is installed.`);
       return;
     }
@@ -244,13 +279,18 @@ function findTypesFile() {
 
 function findTypeFiles(dir) {
   const results = [];
-  try {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) results.push(...findTypeFiles(full));
-      else if (/\.types\.ts$/.test(entry.name)) results.push(full);
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      try {
+        results.push(...findTypeFiles(full));
+      } catch (e) {
+        warnings.push(`[feature-flow] Could not scan directory ${full} for type files: ${e.message?.slice(0, 80)}`);
+      }
+    } else if (/\.types\.ts$/.test(entry.name)) {
+      results.push(full);
     }
-  } catch {}
+  }
   return results;
 }
 
