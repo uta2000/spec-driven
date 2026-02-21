@@ -143,6 +143,22 @@ If an issue reference is found:
 
 If no issue reference is found, proceed as before.
 
+**Issue richness scoring (when an issue is linked):**
+
+Assess the linked issue for context richness. Count the following signals:
+1. Has acceptance criteria or clear requirements sections
+2. Has resolved discussion in comments (answered questions)
+3. Has concrete examples, mockups, or specifications
+4. Body is >200 words with structured content (headings, lists, tables)
+
+A score of 3+ means the issue is "detailed."
+
+**Inline context richness:**
+
+If the user's initial message (not the issue) contains detailed design decisions — specific approach descriptions, UX flows, data model specifics, or concrete behavior specifications — treat this as equivalent to a detailed issue for recommendation purposes.
+
+**Scope classification:**
+
 | Scope | Description | Example |
 |-------|------------|---------|
 | **Quick fix** | Single-file bug fix, typo, config change | "Fix the null check in the login handler" |
@@ -150,19 +166,46 @@ If no issue reference is found, proceed as before.
 | **Feature** | Multiple files, new UI or API, possible data model changes | "Add CSV export to the results page" |
 | **Major feature** | New page/workflow, data model changes, external API integration, pipeline changes | "Build a creative domain generator with LLM" |
 
-Present the classification to the user:
+**Smart recommendation logic:**
 
+Determine the recommended mode using three signals:
+
+| Scope | Default | With detailed issue | With detailed inline context |
+|-------|---------|--------------------|-----------------------------|
+| Quick fix | YOLO | YOLO | YOLO |
+| Small enhancement | YOLO | YOLO | YOLO |
+| Feature | Interactive | YOLO (override) | YOLO (override) |
+| Major feature | Interactive | Neutral | Neutral |
+
+**Combined scope + mode prompt:**
+
+Present the classification AND mode recommendation to the user in a **single** `AskUserQuestion`. The question text includes the scope, step count, and (if applicable) issue context summary.
+
+**Question format:**
 ```
-This looks like a [scope]. Here's the lifecycle for this work:
+This looks like a **[scope]** ([N] steps).
+[If issue linked: "Found issue #N: [title] — [richness summary]."]
 
-[show applicable steps with checkboxes]
-
-Does this look right, or should I adjust the scope?
+Run mode?
 ```
 
-Use `AskUserQuestion` to confirm. Options: the four scope levels.
+**Option ordering depends on recommendation:**
 
-**YOLO behavior:** If YOLO mode is active, skip this question. Use the LLM's classification based on the scope criteria table above and announce: `YOLO: start-feature — Scope classification → [selected scope]`
+*YOLO recommended* (quick fix, small enhancement, or feature/major with detailed context):
+- Option 1: "YOLO — auto-select recommended options" with description: "*Recommended — [reasoning]*"
+- Option 2: "Interactive — all questions asked normally"
+
+*Interactive recommended* (feature/major without detailed context):
+- Option 1: "Interactive — all questions asked normally" with description: "*Recommended — [reasoning]*"
+- Option 2: "YOLO — auto-select recommended options"
+
+*Neutral* (major feature with detailed issue):
+- Option 1: "Interactive — all questions asked normally" (no recommendation marker)
+- Option 2: "YOLO — auto-select recommended options" (no recommendation marker)
+
+The recommended option always appears first in the list. Each option's description includes italicized reasoning when a recommendation is made.
+
+**YOLO behavior (trigger phrase activated):** If YOLO was already activated by a trigger phrase in Step 0, skip this question entirely. Auto-classify scope and announce: `YOLO: start-feature — Scope + mode → [scope], YOLO (trigger phrase)`
 
 ### Step 2: Build the Step List
 
