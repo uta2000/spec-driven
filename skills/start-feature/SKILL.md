@@ -128,6 +128,20 @@ Check for a `.feature-flow.yml` file in the project root.
 See `../../references/auto-discovery.md` for the full detection rules.
 See `../../references/project-context-schema.md` for the schema.
 
+**Base Branch Detection:**
+
+After loading project context, detect the base branch that will be used as the PR target and for all `...HEAD` diff commands throughout the lifecycle. Detect once and announce — all subsequent steps reference "the detected base branch."
+
+Detection cascade:
+1. `.feature-flow.yml` → `default_branch` field (if present and non-empty)
+2. `git config --get init.defaultBranch` (if set and branch exists locally or on remote)
+3. Check if `staging` branch exists: `git rev-parse --verify staging 2>/dev/null`
+4. Fall back to `main` (or `master` if `main` doesn't exist)
+
+Announce: `"Detected base branch: [branch]. All PR targets and branch diffs will use this."`
+
+**YOLO behavior:** No prompt — always auto-detected. Announce: `YOLO: start-feature — Base branch detection → [branch]`
+
 ### Step 1: Determine Scope
 
 Ask the user what they want to build. Then classify the work.
