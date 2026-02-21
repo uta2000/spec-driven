@@ -259,6 +259,17 @@ function detectTestCommand() {
     return 'python -m pytest';
   }
 
+  // Deno detection
+  if (existsSync('deno.json') || existsSync('deno.jsonc')) {
+    try {
+      execSync('deno --version', { stdio: 'pipe', timeout: 5000 });
+      return 'deno test';
+    } catch {
+      warnings.push('[feature-flow] deno.json found but deno not installed — skipping test check.');
+      return null;
+    }
+  }
+
   return null;
 }
 
