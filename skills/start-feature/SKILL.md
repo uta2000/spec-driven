@@ -362,12 +362,24 @@ This step runs after worktree setup and before implementation. It forces reading
 **Process:**
 1. Read `../../references/coding-standards.md` to load the senior-engineer principles
 2. Identify the areas of the codebase that will be modified or extended (from the implementation plan)
-3. For each area, read 2-3 existing files that do similar things:
-   - Adding a new API route? Read 2 existing API routes in the same directory
-   - Adding a new component? Read 2 similar components
-   - Adding a new hook? Read existing hooks
-   - Adding a database query? Read existing query patterns
-4. Extract and document the patterns found:
+3. **Parallel dispatch** — For each identified area, dispatch one Explore agent to read 2-3 example files and extract patterns. Each agent also flags anti-patterns (files >300 lines, mixed concerns, circular dependencies, duplicated logic).
+
+   Use the Task tool with `subagent_type=Explore`. Launch all agents in a **single message** to run them concurrently. Announce: "Dispatching N pattern study agents in parallel..."
+
+   **Context passed to each agent:**
+   - Area name and file paths/directories to examine
+   - Instructions: read 2-3 example files, extract file structure, error handling, naming conventions, and state management patterns
+   - Instructions: flag anti-patterns — files exceeding 300 lines (god files), mixed concerns, circular dependency imports, duplicated logic
+
+   **Expected return format per agent:**
+
+   ```
+   { area: string, patterns: [{ aspect: string, pattern: string }], antiPatterns: [{ file: string, issue: string, recommendation: string }] }
+   ```
+
+   **Failure handling:** If an agent fails or crashes, retry it once. If it fails again, skip that area and log a warning: "[Area] pattern study failed — skipping. Continuing with available results."
+
+4. **Consolidation** — Merge all agent results into the following sections:
 
 **Output format:**
 ```
@@ -388,6 +400,13 @@ This step runs after worktree setup and before implementation. It forces reading
 - [List relevant items from coding-standards.md for this feature]
 ```
 
+   **Anti-Patterns Found (do NOT replicate):**
+
+```
+### Anti-Patterns Found (do NOT replicate)
+- `[file]` ([N] lines) — [issue]. [recommendation].
+```
+
 5. **Generate "How to Code This" notes** for each task in the implementation plan. For each task, write a brief note mapping the task to the patterns found:
 
 ```
@@ -403,24 +422,7 @@ This step runs after worktree setup and before implementation. It forces reading
 - State management: [specific approach matching existing patterns]
 ```
 
-6. **Flag anti-patterns in existing code (do not replicate):**
-   For each file read, assess whether it exhibits structural issues:
-   - File exceeds 300 lines → note as a god file; do not replicate the monolithic structure
-   - File mixes concerns (e.g., data fetching + rendering + business logic in one component) → note which concern to extract in new code
-   - File has imports that create circular dependencies → note and avoid in new code
-   - File duplicates logic found elsewhere → note the canonical location to import from instead
-
-   If anti-patterns are found, add an "Anti-Patterns to Avoid" section to the output:
-
-```
-### Anti-Patterns Found (do NOT replicate)
-- `src/components/SearchPage.tsx` (412 lines) — god component mixing fetch, transform, and render. New code should separate these into a hook (fetch/transform) and a component (render).
-- `src/lib/utils.ts` imports from `src/components/Badge.tsx` — inverted dependency. New utilities must not import from components.
-```
-
-   Pass these warnings alongside the positive patterns to the implementation step as mandatory context. New code must follow the good patterns AND avoid the flagged anti-patterns.
-
-7. Pass these patterns, the "How to Code This" notes, AND any anti-pattern warnings to the implementation step as mandatory context. **New code MUST follow these patterns unless there is a documented reason to deviate.**
+6. Pass these patterns, the "How to Code This" notes, AND any anti-pattern warnings from the consolidated output to the implementation step as mandatory context. **New code MUST follow these patterns unless there is a documented reason to deviate.**
 
 **Quality rules:**
 - Read at least 2 existing files per area being modified
