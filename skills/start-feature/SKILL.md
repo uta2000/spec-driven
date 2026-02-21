@@ -200,21 +200,26 @@ Run mode?
 
 *YOLO recommended* (quick fix, small enhancement, or feature with detailed context):
 - Option 1: "YOLO — auto-select recommended options" with description: "*Recommended — [reasoning]*"
-- Option 2: "Interactive — all questions asked normally"
+- Option 2: "YOLO with compaction prompts — auto-select all decisions, but pause at phase transitions for optional `/compact`"
+- Option 3: "Interactive — all questions asked normally"
 
 *Interactive recommended* (feature/major without detailed context):
 - Option 1: "Interactive — all questions asked normally" with description: "*Recommended — [reasoning]*"
-- Option 2: "YOLO — auto-select recommended options"
+- Option 2: "YOLO with compaction prompts — auto-select all decisions, but pause at phase transitions for optional `/compact`"
+- Option 3: "YOLO — auto-select recommended options"
 
 *Neutral* (major feature with detailed issue or detailed inline context):
 - Option 1: "Interactive — all questions asked normally" (no recommendation marker)
-- Option 2: "YOLO — auto-select recommended options" (no recommendation marker)
+- Option 2: "YOLO with compaction prompts — auto-select all decisions, but pause at phase transitions for optional `/compact`"
+- Option 3: "YOLO — auto-select recommended options" (no recommendation marker)
 
 The recommended option always appears first in the list. Each option's description includes italicized reasoning when a recommendation is made.
 
 **Scope correction:** If the user believes the scope is misclassified, they can select "Other" on the `AskUserQuestion` and state their preferred scope. The lifecycle will adjust the step list and checkpoint rules accordingly.
 
 **YOLO behavior (trigger phrase activated):** If YOLO was already activated by a trigger phrase in Step 0, skip this question entirely. Auto-classify scope and announce: `YOLO: start-feature — Scope + mode → [scope], YOLO (trigger phrase)`
+
+**YOLO with compaction behavior:** If the user selects "YOLO with compaction prompts", set both YOLO mode and `compact_prompts` flag active. All YOLO overrides apply, but context window checkpoints are shown instead of suppressed.
 
 ### Step 2: Build the Step List
 
