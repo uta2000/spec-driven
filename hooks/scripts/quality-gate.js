@@ -259,29 +259,29 @@ function detectTestCommand() {
     return 'python -m pytest';
   }
 
-  // Deno detection
   if (existsSync('deno.json') || existsSync('deno.jsonc')) {
-    try {
-      execSync('deno --version', { stdio: 'pipe', timeout: 5000 });
-      return 'deno test';
-    } catch {
-      warnings.push('[feature-flow] deno.json found but deno not installed — skipping test check.');
-      return null;
-    }
+    return detectRuntimeTestCommand('deno', 'deno test', 'Install deno or remove deno.json.');
   }
 
-  // Bun detection
-  if (existsSync('bun.lockb') || existsSync('bunfig.toml')) {
-    try {
-      execSync('bun --version', { stdio: 'pipe', timeout: 5000 });
-      return 'bun test';
-    } catch {
-      warnings.push('[feature-flow] bun.lockb found but bun not installed — skipping test check.');
-      return null;
-    }
+  if (existsSync('bun.lockb') || existsSync('bun.lock') || existsSync('bunfig.toml')) {
+    return detectRuntimeTestCommand('bun', 'bun test', 'Install bun or remove the lockfile.');
   }
 
   return null;
+}
+
+function detectRuntimeTestCommand(runtime, command, hint) {
+  try {
+    execSync(`${runtime} --version`, { stdio: 'pipe', timeout: 5000 });
+    return command;
+  } catch (e) {
+    const isNotFound = e.code === 'ENOENT' || e.status === 127;
+    const detail = isNotFound
+      ? `${runtime} not found in PATH`
+      : `${runtime} --version failed (${e.code || 'exit ' + e.status}): ${(e.message || '').slice(0, 100)}`;
+    warnings.push(`[feature-flow] ${runtime} config found but ${detail} — skipping test check. ${hint}`);
+    return null;
+  }
 }
 
 // --- Helpers ---
