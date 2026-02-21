@@ -362,10 +362,10 @@ For inline steps (CHANGELOG generation, self-review, code review, study existing
 | Generate CHANGELOG entry | No skill — inline step (see below) | CHANGELOG.md updated with categorized entry |
 | Final verification | `feature-flow:verify-acceptance-criteria` + `superpowers:verification-before-completion` | All criteria PASS + lint/typecheck/build pass |
 | Commit and PR | `superpowers:finishing-a-development-branch` | PR URL |
-| Comment and close issue | No skill — inline step (see below) | Issue commented with implementation summary + closed |
 | Device matrix testing | No skill — manual step | Tested on min OS, small/large screens, slow network |
 | Beta testing | No skill — manual step | TestFlight / Play Console build tested by internal tester |
 | App store review | No skill — manual step | Submission accepted |
+| Comment and close issue | No skill — inline step (see below) | Issue commented with implementation summary + closed |
 
 ### Brainstorming Interview Format Override
 
@@ -946,8 +946,12 @@ This step runs after "Commit and PR" (or after mobile-specific steps like app st
 
 3. **Post the comment:**
    ```bash
-   gh issue comment N --body "[generated comment]"
+   gh issue comment N --body "$(cat <<'EOF'
+   [generated comment]
+   EOF
+   )"
    ```
+   Use a heredoc to safely pass multiline markdown content to `gh`.
 
 4. **Close the issue:**
    ```bash

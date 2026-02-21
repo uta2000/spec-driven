@@ -115,10 +115,10 @@ types_path: src/types/database.types.ts
 
 ### `default_branch`
 
-Optional PR target branch. When set, overrides the automatic detection cascade used by `start-feature` to determine where PRs should target.
+Optional PR target branch. When set, overrides the automatic detection cascade used by `start-feature` and `finishing-a-development-branch` to determine where PRs should target.
 
 **Detection cascade (when `default_branch` is absent):**
-1. `git config --get init.defaultBranch` (if set)
+1. `git config --get init.defaultBranch` (if set and branch exists locally or on remote)
 2. Check if `staging` branch exists: `git rev-parse --verify staging 2>/dev/null`
 3. Fall back to `main` (or `master` if `main` doesn't exist)
 
