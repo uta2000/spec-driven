@@ -690,11 +690,11 @@ This step runs after self-review and before final verification. It dispatches mu
 
 **Model override:** If the user has requested a specific model for the entire lifecycle (e.g., "use opus for everything" or "use sonnet for everything"), apply that model to all agent dispatches in this code review pipeline, overriding the per-agent defaults in the table.
 
-**Large file handling:** If the branch diff includes files >200KB, instruct review agents to use `git diff main...HEAD -- <file>` for those files instead of reading the full file. The diff contains only the changed sections, which is what reviewers need.
+**Large file handling:** If the branch diff includes files >200KB, instruct review agents to use `git diff [base-branch]...HEAD -- <file>` (where `[base-branch]` is the branch detected in Step 0) for those files instead of reading the full file. The diff contains only the changed sections, which is what reviewers need.
 
 #### Phase 1: Dispatch review agents
 
-Dispatch all available review agents in parallel. For each agent, use the Task tool with the agent's `subagent_type` and `model` parameter (see table below). Each agent's prompt should include the full branch diff (`git diff main...HEAD`) and a description of what to review. Launch all agents in a single message to run them concurrently.
+Dispatch all available review agents in parallel. For each agent, use the Task tool with the agent's `subagent_type` and `model` parameter (see table below). Each agent's prompt should include the full branch diff (`git diff [base-branch]...HEAD`) and a description of what to review. Launch all agents in a single message to run them concurrently.
 
 | Agent | Plugin | Role | Fix Mode | Model |
 |-------|--------|------|----------|-------|
@@ -791,7 +791,7 @@ This step runs after code review and before final verification. It auto-generate
 
 #### Phase 1: Collect commits
 
-1. Get all commit messages on the feature branch: `git log --format="%s" main...HEAD`
+1. Get all commit messages on the feature branch: `git log --format="%s" [base-branch]...HEAD`
 2. Filter out merge commits matching `^Merge (branch|pull request)`
 3. Filter out fixup/squash commits matching `^(fixup|squash)!`
 4. If no commits remain after filtering, skip the step: "No commits found on feature branch — skipping CHANGELOG generation."
