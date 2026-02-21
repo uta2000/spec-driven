@@ -76,9 +76,9 @@ Ensure the lifecycle is followed from start to finish. Track which steps are com
 
 ### Step 0: Load or Create Project Context
 
-**YOLO Mode Detection:**
+**YOLO Trigger Phrase Detection:**
 
-Before any other processing, check if the user requested YOLO mode. Parse the `ARGUMENTS` string for trigger phrases using **word-boundary matching** (not substring matching, to avoid false positives like "build a yolo-themed game"):
+Before any other processing, check if the user requested YOLO mode via a trigger phrase. Parse the `ARGUMENTS` string for trigger phrases using **word-boundary matching** (not substring matching, to avoid false positives like "build a yolo-themed game"):
 
 1. Check for trigger phrases:
    - `--yolo` (flag style — match as a standalone token)
@@ -89,10 +89,7 @@ Before any other processing, check if the user requested YOLO mode. Parse the `A
    - Announce: "YOLO mode active. Auto-selecting recommended options. Decision log will be printed at completion."
    - Strip the trigger phrase from the arguments before further processing (so `start feature: add CSV export --yolo` becomes `start feature: add CSV export` for scope classification)
 3. If no trigger is found:
-   - Ask a one-time startup question via `AskUserQuestion`: "Run in **interactive** or **YOLO** mode?" with options:
-     - "Interactive (default)" — all questions asked normally
-     - "YOLO — auto-select recommended options" — auto-pilot with decision logging
-   - If the user selects YOLO, set YOLO mode active and announce as above
+   - Do nothing here — the YOLO/Interactive mode prompt is presented in Step 1 after scope classification, where the system can make a smart recommendation based on scope and issue context.
 
 Check for a `.spec-driven.yml` file in the project root.
 
@@ -146,6 +143,22 @@ If an issue reference is found:
 
 If no issue reference is found, proceed as before.
 
+**Issue richness scoring (when an issue is linked):**
+
+Assess the linked issue for context richness. Count the following signals:
+1. Has acceptance criteria or clear requirements sections
+2. Has resolved discussion in comments (answered questions)
+3. Has concrete examples, mockups, or specifications
+4. Body is >200 words with structured content (headings, lists, tables)
+
+A score of 3+ means the issue is "detailed."
+
+**Inline context richness:**
+
+If the user's initial message (not the issue) contains detailed design decisions — specific approach descriptions, UX flows, data model specifics, or concrete behavior specifications — treat this as equivalent to a detailed issue for recommendation purposes.
+
+**Scope classification:**
+
 | Scope | Description | Example |
 |-------|------------|---------|
 | **Quick fix** | Single-file bug fix, typo, config change | "Fix the null check in the login handler" |
@@ -153,19 +166,48 @@ If no issue reference is found, proceed as before.
 | **Feature** | Multiple files, new UI or API, possible data model changes | "Add CSV export to the results page" |
 | **Major feature** | New page/workflow, data model changes, external API integration, pipeline changes | "Build a creative domain generator with LLM" |
 
-Present the classification to the user:
+**Smart recommendation logic:**
 
+Determine the recommended mode using three signals:
+
+| Scope | Default | With detailed issue | With detailed inline context |
+|-------|---------|--------------------|-----------------------------|
+| Quick fix | YOLO | YOLO | YOLO |
+| Small enhancement | YOLO | YOLO | YOLO |
+| Feature | Interactive | YOLO (override) | YOLO (override) |
+| Major feature | Interactive | Neutral | Neutral |
+
+**Combined scope + mode prompt:**
+
+Present the classification AND mode recommendation to the user in a **single** `AskUserQuestion`. The question text includes the scope, step count, and (if applicable) issue context summary.
+
+**Question format:**
 ```
-This looks like a [scope]. Here's the lifecycle for this work:
+This looks like a **[scope]** ([N] steps).
+[If issue linked: "Found issue #N: [title] — [richness summary]."]
 
-[show applicable steps with checkboxes]
-
-Does this look right, or should I adjust the scope?
+Run mode?
 ```
 
-Use `AskUserQuestion` to confirm. Options: the four scope levels.
+**Option ordering depends on recommendation:**
 
-**YOLO behavior:** If YOLO mode is active, skip this question. Use the LLM's classification based on the scope criteria table above and announce: `YOLO: start-feature — Scope classification → [selected scope]`
+*YOLO recommended* (quick fix, small enhancement, or feature with detailed context):
+- Option 1: "YOLO — auto-select recommended options" with description: "*Recommended — [reasoning]*"
+- Option 2: "Interactive — all questions asked normally"
+
+*Interactive recommended* (feature/major without detailed context):
+- Option 1: "Interactive — all questions asked normally" with description: "*Recommended — [reasoning]*"
+- Option 2: "YOLO — auto-select recommended options"
+
+*Neutral* (major feature with detailed issue or detailed inline context):
+- Option 1: "Interactive — all questions asked normally" (no recommendation marker)
+- Option 2: "YOLO — auto-select recommended options" (no recommendation marker)
+
+The recommended option always appears first in the list. Each option's description includes italicized reasoning when a recommendation is made.
+
+**Scope correction:** If the user believes the scope is misclassified, they can select "Other" on the `AskUserQuestion` and state their preferred scope. The lifecycle will adjust the step list and checkpoint rules accordingly.
+
+**YOLO behavior (trigger phrase activated):** If YOLO was already activated by a trigger phrase in Step 0, skip this question entirely. Auto-classify scope and announce: `YOLO: start-feature — Scope + mode → [scope], YOLO (trigger phrase)`
 
 ### Step 2: Build the Step List
 
@@ -265,11 +307,11 @@ For each step, follow this pattern:
 5. **Mark complete:** Update the todo item to `completed`
 6. **Announce next step:** "Step N complete. Next: Step N+1 — [name]."
 
-**YOLO Propagation:** When YOLO mode is active, prepend `yolo: true.` to the `args` parameter of every `Skill` invocation. For example:
+**YOLO Propagation:** When YOLO mode is active, prepend `yolo: true. scope: [scope].` to the `args` parameter of every `Skill` invocation. Scope context is required for graduated YOLO behavior — design-document uses it to determine whether a mandatory checkpoint is needed. For example:
 
 ```
-Skill(skill: "superpowers:brainstorming", args: "yolo: true. [original args]")
-Skill(skill: "spec-driven:design-document", args: "yolo: true. [original args]")
+Skill(skill: "superpowers:brainstorming", args: "yolo: true. scope: [scope]. [original args]")
+Skill(skill: "spec-driven:design-document", args: "yolo: true. scope: [scope]. [original args]")
 ```
 
 For inline steps (CHANGELOG generation, self-review, code review, study existing patterns), the YOLO flag is already in the conversation context — no explicit propagation is needed.
@@ -330,6 +372,52 @@ When invoking `superpowers:brainstorming` from this lifecycle, pass these format
 4. Ensure all self-answered decisions are captured when passing context to the design document step
 
 This is the most complex YOLO interaction — the LLM makes design-level decisions. The user reviews these via the design document output rather than each micro-decision.
+
+**Graduated YOLO checkpoint (Major Feature only):**
+
+After all brainstorming questions have been self-answered, if the scope is **Major Feature**, present a mandatory checkpoint summarizing all auto-answered decisions:
+
+```
+YOLO checkpoint: Brainstorming complete. Here are the design decisions I made:
+
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | [question] | [selected option with reasoning] |
+| ... | ... | ... |
+
+Continue or adjust?
+```
+
+Use `AskUserQuestion` with options:
+- "Continue" — proceed to design document with these decisions
+- "Let me adjust" — user provides corrections to specific decisions, then YOLO resumes
+
+For Quick fix, Small enhancement, and Feature scopes, skip this checkpoint — proceed directly from brainstorming to the next step.
+
+### Graduated YOLO Behavior
+
+When YOLO mode is active (whether from trigger phrase or user selection), the number of mandatory checkpoints scales with scope complexity:
+
+| Scope | Checkpoints | Where |
+|-------|------------|-------|
+| Quick fix | 0 | Full autonomy — zero interactive prompts |
+| Small enhancement | 0 | Full autonomy — zero interactive prompts |
+| Feature | 1 | Design document approval (before implementation) |
+| Major feature | 2 | Brainstorming output summary + Design document approval |
+
+**Checkpoint UX:** Mandatory checkpoints are presented via `AskUserQuestion`:
+
+```
+YOLO checkpoint: [artifact summary]. Continue or adjust?
+```
+
+Options:
+- "Continue" — resume YOLO mode for remaining steps
+- "Let me adjust" — user provides corrections, then YOLO resumes (does NOT switch to interactive for remaining steps)
+
+**Scope upgrade rule:** If scope is upgraded during the lifecycle (e.g., Small Enhancement → Feature via Scope Adjustment Rules), adopt the checkpoint rules of the new scope for all remaining steps.
+
+**What checkpoints do NOT affect:** All other YOLO decisions (platform detection, CHANGELOG heading, gotcha additions, issue creation, plan criteria approval) remain fully auto-selected regardless of scope.
 
 ### Commit Planning Artifacts Step (inline — no separate skill)
 
@@ -765,20 +853,40 @@ Summary:
 
 **YOLO Decision Log (if YOLO mode was active):**
 
-If the lifecycle ran in YOLO mode, append the full decision log after the standard completion summary:
+If the lifecycle ran in YOLO mode, append the decision log after the standard completion summary. The format varies by whether checkpoints were used:
+
+**Full YOLO (quick fix / small enhancement — no checkpoints):**
 
 ```
 ## YOLO Decision Log
 
+**Mode:** YOLO (system recommended — [scope] scope, low complexity)
+
 | # | Skill | Decision | Auto-Selected |
 |---|-------|----------|---------------|
-| 1 | start-feature | Platform/stack detection | Accepted: [platform], [stack] |
-| 2 | start-feature | Scope classification | [scope] |
-| 3 | brainstorming | [question] | [answer] |
+| 1 | start-feature | Scope + mode | [scope], YOLO recommended |
 | ... | ... | ... | ... |
 
 **Total decisions auto-selected:** N
 **Quality gates preserved:** hooks, tests, verification, code review
+```
+
+**Graduated YOLO (feature / major feature — with checkpoints):**
+
+```
+## YOLO Decision Log
+
+**Mode:** YOLO with checkpoints (system recommended — [scope] scope, [reasoning])
+**Checkpoints presented:** M
+
+| # | Skill | Decision | Auto-Selected |
+|---|-------|----------|---------------|
+| ... | ... | ... | ... |
+| N | design-document | Document approval | ✋ User reviewed (approved / adjusted) |
+| ... | ... | ... | ... |
+
+**Total decisions auto-selected:** N
+**Checkpoints presented:** M of M approved [with/without changes]
 ```
 
 **Cancellation:** There is no formal YOLO cancellation mechanism. Inline announcements (`YOLO: [skill] — [decision] → [option]`) serve as an "emergency brake" — the user sees each decision as it's made and can interrupt the lifecycle at any point by sending a message. The lifecycle will pause at the current step, and the user can redirect from there.
