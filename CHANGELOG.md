@@ -2,6 +2,18 @@
 
 All notable changes to the spec-driven plugin.
 
+## [Unreleased]
+
+### Added
+- **Parallel agent dispatch for skill operations** — converts four sequential skill operations to parallel agent dispatch using the Task tool. Design verification dispatches 6 thematic batch agents (Schema & Types, Pipeline & Components, Quality & Safety, Patterns & Build, Structure & Layout, Stack/Platform/Docs) with verification depth filtering. Spike experiments dispatch one worktree-isolated `general-purpose` agent per assumption (cap: 5 concurrent). Design document context gathering dispatches 3-4 Explore agents for format patterns, stack dependencies, relevant code, and optional Context7 documentation. Start-feature pattern study dispatches one Explore agent per codebase area to extract patterns and flag anti-patterns. All skills use consistent failure handling (retry once, then skip with warning) and consolidation patterns.
+- Batch grouping annotations added to verification checklist (`<!-- batch: N -->` markers) for parallel partitioning
+
+### Fixed
+- Batch 6 dispatch now specifies `subagent_type=Explore`, context specification, and concurrent launch with Batches 1-5
+- Verification return format uses array notation to match list-of-results semantics
+- SKIPPED verification categories tracked distinctly from PASS/FAIL/WARNING with prominent warnings
+- Context7 skip conditions consolidated into dispatch table to prevent unnecessary agent dispatches
+
 ## [1.12.0] - 2026-02-20
 
 ### Added
