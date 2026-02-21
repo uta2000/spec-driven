@@ -440,6 +440,48 @@ Options:
 
 **What checkpoints do NOT affect:** All other YOLO decisions (platform detection, CHANGELOG heading, gotcha additions, issue creation, plan criteria approval, superpowers overrides) remain fully auto-selected regardless of scope.
 
+### Context Window Checkpoints
+
+At specific phase transitions, output a checkpoint prompt suggesting the user run `/compact` to free context window space. The lifecycle pauses — the user must respond before the next step begins. `/compact` is a client-side Claude Code command that cannot be invoked programmatically — the skill can only suggest it.
+
+**Checkpoint format:**
+
+```
+--- Context Checkpoint ---
+[Phase name] complete. Consider running:
+/compact focus on [context-specific focus hint]
+Or type "continue" to skip compaction and proceed.
+```
+
+**Checkpoint locations:**
+
+| # | After Step | Before Step | Focus Hint |
+|---|-----------|-------------|------------|
+| 1 | Documentation lookup | Design Document | `focus on brainstorming decisions and documentation patterns` |
+| 2 | Design Verification (or Design Document for small enhancements which skip verification) | Create Issue + Implementation Plan | `focus on the approved design and implementation plan` |
+| 3 | Commit Planning Artifacts | Worktree Setup + Implementation | `focus on the implementation plan and acceptance criteria` |
+
+**Scope-based filtering:**
+
+| Scope | Checkpoints shown |
+|-------|------------------|
+| Quick fix | None (too few steps) |
+| Small enhancement | 2 and 3 only |
+| Feature | All 3 |
+| Major feature | All 3 |
+
+**Suppression rules:**
+- **YOLO mode (no compaction):** Checkpoints are suppressed — do not output the checkpoint block
+- **YOLO with compaction prompts:** Checkpoints are shown — output the checkpoint block and wait
+- **Interactive mode:** Checkpoints are shown — output the checkpoint block and wait
+- **Quick fix scope:** No checkpoints regardless of mode
+
+**Handling the response:**
+When the user responds after a checkpoint:
+- If the user types "continue", "skip", "next", or "proceed" → resume the lifecycle at the next step
+- If the user ran `/compact` and then sends any message → the context has been compressed. Check the todo list to determine the current step and announce: "Resuming lifecycle. Last completed step: [N]. Next: [N+1] — [name]."
+- Any other response → treat as "continue" and resume
+
 ### Writing Plans YOLO Override
 
 When YOLO mode is active and invoking `superpowers:writing-plans`:
