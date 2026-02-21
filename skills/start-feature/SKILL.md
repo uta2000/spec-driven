@@ -552,6 +552,7 @@ This step runs after copy env files and before implementation. It forces reading
    - Area name and file paths/directories to examine
    - Instructions: read 2-3 example files, extract file structure, error handling, naming conventions, and state management patterns
    - Instructions: flag anti-patterns — files exceeding 300 lines (god files), mixed concerns, circular dependency imports, duplicated logic
+   - Instructions: before reading any file, check its size with `wc -c < file`. If >200KB, use Grep to find relevant sections instead of reading the whole file, or use Read with offset/limit parameters targeting the specific functions/components being studied.
 
    **Expected return format per agent:**
 
