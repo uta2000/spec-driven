@@ -91,14 +91,33 @@ Place spike scripts in a temporary location: `scripts/spike-*.{ts,mjs,py,sh}` (o
 
 ### Step 3: Run Experiments
 
-Execute each experiment and record results. For each:
+Dispatch one agent per selected assumption to run experiments in parallel. Each agent executes its experiment independently in an isolated worktree.
 
-1. **State the hypothesis:** "Gemini returns valid JSON with 100 items"
-2. **Run the experiment:** Execute the script or API call
-3. **Record the evidence:** Actual output, timing, error messages
-4. **Verdict:** CONFIRMED or DENIED
+#### Dispatch
 
-If an experiment requires an API key or credential that is not available, mark it as CANNOT_TEST and explain what would be needed.
+Use the Task tool with `subagent_type=general-purpose` and `isolation: "worktree"` for every agent. Launch up to **5 agents** in a single message to run them concurrently. If more than 5 assumptions need testing, dispatch the first 5, wait for completion, then dispatch the remainder.
+
+Announce: "Dispatching N experiment agents in parallel (worktree-isolated)..."
+
+**Context passed to each agent:**
+- The hypothesis to test (from Step 1)
+- The experiment design (from Step 2)
+- Instructions: create the spike script, run it, record evidence (actual output, timing, error messages), and return a verdict
+- Note about API keys/credentials: if the experiment requires a key or credential that is not available, return CANNOT_TEST with an explanation of what would be needed
+
+**Expected return format per agent:**
+
+```
+{ assumption: string, verdict: "CONFIRMED" | "DENIED" | "CANNOT_TEST", evidence: string }
+```
+
+#### Failure Handling
+
+If an agent fails or crashes, retry it once. If it fails again, mark its assumption as CANNOT_TEST with evidence: "Agent failed after retry." Do not stall the spike for a single agent failure.
+
+#### Consolidation
+
+After all agents complete, merge results into the spike report table (same format as Step 4). Worktrees are automatically cleaned up if the agent made no persistent changes.
 
 ### Step 4: Report Findings
 
