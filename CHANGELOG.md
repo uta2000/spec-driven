@@ -4,6 +4,19 @@ All notable changes to the feature-flow plugin.
 
 ## [Unreleased]
 
+### Fixed
+- Removed blank line breaking `### Added` list continuity in CHANGELOG
+
+### Maintenance
+- Migrated `context7` config from `.spec-driven.yml` to `.feature-flow.yml` and deleted stale config file
+- Versioned `[Unreleased]` CHANGELOG section as `[1.15.0] - 2026-02-21`
+- Tracked 5 previously-untracked plan docs from PRs 44-55
+- Deleted orphaned `skills/start-feature/` directory, stale `https:` directory, and `superpowers/` worktree artifact
+- Added missing `skills/session-report/CLAUDE.md`
+- Pruned stale git worktrees
+
+## [1.15.0] - 2026-02-21
+
 ### Added
 - **Post-PR lifecycle steps** — adds three post-PR capabilities to the feature lifecycle: (1) new "Comment and Close Issue" inline step that posts a detailed implementation summary (PR number, what was built, acceptance criteria verified, key files changed) on the linked GitHub issue and closes it via `gh issue close` after PR creation, (2) configurable PR target branch detection via `default_branch` field in `.feature-flow.yml` with a 4-step cascade (config field → `git config init.defaultBranch` → staging branch → main/master fallback), replacing all hardcoded `main` references in git commands, (3) expanded completion summary with issue close status, PR target branch, worktree cleanup guidance, and actionable next steps. Uses `Related: #N` instead of `Closes #N` in PR body to prevent silent auto-close on merge. Closes #34.
 - **Deno and Bun test runner detection** — `detectTestCommand()` in `hooks/scripts/quality-gate.js` now detects Deno projects (`deno.json` / `deno.jsonc`) and Bun projects (`bun.lockb` / `bun.lock` / `bunfig.toml`), verifying the runtime is installed before returning the test command. Missing runtimes emit a descriptive warning and skip gracefully. Extracted shared `detectRuntimeTestCommand` helper for consistent error handling across runtimes. Inline test detection list in `SKILL.md` updated to match. Closes #40.
@@ -18,7 +31,6 @@ All notable changes to the feature-flow plugin.
 - **Intelligent model routing** — adds `model` parameter to all Task tool agent dispatches across 4 skill files. Code review pipeline routes reasoning-heavy agents (superpowers:code-reviewer, feature-dev:code-reviewer, backend-security-coder) to Opus and pattern-based agents (code-simplifier, silent-failure-hunter, pr-test-analyzer, type-design-analyzer) to Sonnet. Explore agents for codebase exploration, context gathering, and pattern study use Haiku. Verification batch agents and spike experiment agents use Sonnet. User model override mechanism added to code review pipeline. Phase 5 report template surfaces active model override.
 - **Parallel agent dispatch for skill operations** — converts four sequential skill operations to parallel agent dispatch using the Task tool. Design verification dispatches 6 thematic batch agents (Schema & Types, Pipeline & Components, Quality & Safety, Patterns & Build, Structure & Layout, Stack/Platform/Docs) with verification depth filtering. Spike experiments dispatch one worktree-isolated `general-purpose` agent per assumption (cap: 5 concurrent). Design document context gathering dispatches 3-4 Explore agents for format patterns, stack dependencies, relevant code, and optional Context7 documentation. Start-feature pattern study dispatches one Explore agent per codebase area to extract patterns and flag anti-patterns. All skills use consistent failure handling (retry once, then skip with warning) and consolidation patterns.
 - Batch grouping annotations added to verification checklist (`<!-- batch: N -->` markers) for parallel partitioning
-
 - **YOLO superpowers overrides** — adds CRITICAL OVERRIDE blocks for 5 superpowers skills (brainstorming, writing-plans, using-git-worktrees, finishing-a-development-branch, subagent-driven-development) that explicitly name and suppress conflicting interactive prompts. Strengthens the brainstorming override from weak 4-line block to 6-step explicit pre-emption. Adds test failure handling to finishing override. Updates YOLO Decision Log templates with superpowers auto-decision rows.
 - **Context window checkpoint prompts** — adds automatic `/compact` prompts at three natural phase transitions in the `start` lifecycle (after documentation lookup, after design verification, after commit planning artifacts). Introduces a third YOLO mode: "YOLO with compaction prompts" that auto-selects all decisions but pauses at phase transitions for optional context compaction. New `--yolo-compact` and `yolo compact mode` trigger phrases activate the mode. Checkpoint format uses `--- Context Checkpoint ---` blocks with context-specific focus hints. Scope-based filtering: quick fix gets no checkpoints, small enhancement gets 2, feature/major feature gets all 3. Suppression rules ensure plain YOLO mode skips checkpoints while interactive and compaction modes show them. Post-compact resume announces current step for re-orientation. New YOLO decision log variant tracks compaction checkpoint outcomes. Closes #33.
 
