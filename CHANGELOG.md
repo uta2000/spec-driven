@@ -4,6 +4,8 @@ All notable changes to the feature-flow plugin.
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-02-21
+
 ### Added
 - **Post-PR lifecycle steps** — adds three post-PR capabilities to the feature lifecycle: (1) new "Comment and Close Issue" inline step that posts a detailed implementation summary (PR number, what was built, acceptance criteria verified, key files changed) on the linked GitHub issue and closes it via `gh issue close` after PR creation, (2) configurable PR target branch detection via `default_branch` field in `.feature-flow.yml` with a 4-step cascade (config field → `git config init.defaultBranch` → staging branch → main/master fallback), replacing all hardcoded `main` references in git commands, (3) expanded completion summary with issue close status, PR target branch, worktree cleanup guidance, and actionable next steps. Uses `Related: #N` instead of `Closes #N` in PR body to prevent silent auto-close on merge. Closes #34.
 - **Deno and Bun test runner detection** — `detectTestCommand()` in `hooks/scripts/quality-gate.js` now detects Deno projects (`deno.json` / `deno.jsonc`) and Bun projects (`bun.lockb` / `bun.lock` / `bunfig.toml`), verifying the runtime is installed before returning the test command. Missing runtimes emit a descriptive warning and skip gracefully. Extracted shared `detectRuntimeTestCommand` helper for consistent error handling across runtimes. Inline test detection list in `SKILL.md` updated to match. Closes #40.
